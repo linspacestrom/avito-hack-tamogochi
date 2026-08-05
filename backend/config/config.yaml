@@ -1,0 +1,13 @@
+http:
+  host: "0.0.0.0"
+  port: "8080"
+  shutdown_timeout: 5s
+  write_timeout: 5s
+  read_timeout: 5s
+  idle_timeout: 60s
+database:
+  max_open_conns: 20
+  max_idle_conns: 5
+  conn_max_lifetime: 1h
+  conn_max_idle_time: 25m
+  timeout: 5s
