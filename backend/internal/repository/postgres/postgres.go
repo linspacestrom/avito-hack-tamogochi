@@ -3,12 +3,12 @@ package postgres
 import (
 	"context"
 
-	"github.com/Masterminds/squirrel"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var psql = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+// TODO: необходимо поменять на другой builder
+//var psql = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 type Repository struct {
 	db     *pgxpool.Pool
