@@ -1,0 +1,124 @@
+# Архитектура проекта
+
+Зафиксировано по итогам командного созвона 4 августа 2026. Это единая точка правды по решениям
+на старте разработки модулей.
+
+## Зоны ответственности
+
+| Модуль | Ответственный | Состав |
+|---|---|---|
+| pet + auth | @yzhenevstavlyaet | Механика питомца, WebSocket-канал realtime-состояния, вся авторизация |
+| rewards | @NBx03 | Система наград, защита от повторной выдачи |
+| leaderboard | @sonofche | Рейтинг пользователей, агрегация ежедневной сводки |
+| frontend | @McLov8n | Весь UI/UX, дизайн под Авито |
+
+Порядок работы фронтенда: сначала экран питомца с WebSocket-обновлением (часть обязательного
+сценария), затем экран наград, затем лидерборд/сводка. До готовности реальных API — вёрстка
+на моках.
+
+## Схема данных
+
+Предложена @sonofche, зафиксирована как есть без изменений.
+
+### User
+
+| Поле | Комментарий |
+|---|---|
+| id | |
+| email | |
+| displayName | |
+| passwordHash | |
+| status | |
+| createdAt | |
+| updatedAt | |
+
+### Pet
+
+| Поле | Комментарий |
+|---|---|
+| id | |
+| userId | |
+| name | |
+| species | |
+| level | |
+| experience | |
+| health | |
+| energy | |
+| happiness | |
+| streakDays | |
+| lastActionAt | |
+| createdAt | |
+| updatedAt | |
+
+### Event
+
+| Поле | Комментарий |
+|---|---|
+| id | |
+| userId | |
+| petId | |
+| type | |
+| experienceDelta | |
+| payload | |
+| idempotencyKey | Защита от дублирования при повторной обработке одного и того же события |
+| createdAt | |
+
+### RewardDefinition
+
+| Поле | Комментарий |
+|---|---|
+| id | |
+| code | |
+| title | |
+| description | |
+| requiredLevel | |
+| validityDays | |
+| isActive | |
+
+### UserReward
+
+| Поле | Комментарий |
+|---|---|
+| id | |
+| userId | |
+| rewardDefinitionId | |
+| sourceEventId | |
+| status | |
+| issuedAt | |
+| expiresAt | |
+| redeemedAt | |
+
+### ⚠️ Отдельное замечание от @NBx03
+
+В `UserReward` нужен unique constraint на пару `(userId, rewardDefinitionId)` — защита от
+повторной выдачи одной и той же награды одному пользователю.
+
+## Auth-контракт
+
+JWT в httpOnly cookies.
+
+| Метод | Путь | Вход | Действие |
+|---|---|---|---|
+| POST | `/api/auth/register` | email, password, displayName | Создаёт пользователя, ставит cookies, возвращает user |
+| POST | `/api/auth/login` | email, password | Проверяет пользователя, ставит cookies, возвращает user |
+| POST | `/api/auth/refresh` | refresh cookie | Отзывает старую refresh-сессию, создаёт новую пару токенов, возвращает user |
+| POST | `/api/auth/logout` | — | Отзывает refresh-сессию, очищает cookies |
+| GET | `/api/auth/me` | access JWT | Проверяет access JWT, возвращает текущего пользователя |
+
+## Технологический стек
+
+| Компонент | Выбор | Обоснование |
+|---|---|---|
+| БД | Postgres | ACID-гарантии и unique constraints критичны для защиты от повторной выдачи наград |
+| Драйвер БД | pgx + pgxpool | Единый пул соединений на всё приложение, создаётся один раз при старте и передаётся во все три бэкенд-модуля, а не создаётся отдельно в каждом |
+| Роутер | chi | |
+| Логирование | slog | |
+| Query builder для SQL | sqlc | Ошибки в SQL ловятся на этапе сборки, а не в рантайме — важно, пока не все в команде одинаково уверенно знают Go |
+
+## Git-workflow
+
+На старте всё было в `main`. С началом работы над модулями:
+
+- `main` защищена от прямого пуша.
+- Каждый работает в своей feature-ветке.
+- Слияние в `main` — через pull request; саморевью и самоодобрение своего PR разрешено.
