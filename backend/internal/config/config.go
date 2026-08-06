@@ -21,7 +21,6 @@ type Config struct {
 	Log      LogConfig      `yaml:"log"`
 	Database DatabaseConfig `yaml:"database"`
 	Auth     AuthConfig     `yaml:"auth"`
-	Cookie   CookieConfig   `yaml:"cookie"`
 }
 
 type AppConfig struct {
@@ -49,15 +48,15 @@ type LogConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string `env:"DB_HOST" env-default:"localhost"`
-	Port     string `env:"DB_PORT" env-default:"5432"`
-	Username string `env:"DB_USERNAME" env-default:"timur"`
-	Password string `env:"DB_PASSWORD" env-default:"Mars237s!"`
-	Database string `env:"DB_NAME" env-default:"testings"`
-	SSLMode  string `env:"DB_SSLMODE" env-default:"disable"`
+	Host     string `env:"DB_HOST" env-default:"localhost" yaml:"host"`
+	Port     string `env:"DB_PORT" env-default:"5432" yaml:"port"`
+	Username string `env:"DB_USERNAME" yaml:"username"`
+	Password string `env:"DB_PASSWORD" yaml:"password"`
+	Database string `env:"DB_NAME" yaml:"name"`
+	SSLMode  string `env:"DB_SSLMODE" env-default:"disable" yaml:"ssl_mode"`
 
 	MaxOpenConns    int32         `yaml:"max_open_conns" env-default:"25"`
-	MaxIdleConns    int32         `yaml:"max_idle_conns" env-default:"5"`
+	MinOpenConns    int32         `env-default:"5"   yaml:"min_open_conns"`
 	ConnMaxLifetime time.Duration `yaml:"conn_max_lifetime" env-default:"1h"`
 	ConnMaxIdleTime time.Duration `yaml:"conn_max_idle_time" env-default:"30m"`
 
@@ -65,20 +64,9 @@ type DatabaseConfig struct {
 }
 
 type AuthConfig struct {
-	Secret          string        `env:"AUTH_SECRET" env_default:"secret"`
-	AccessTokenTTL  time.Duration `env:"ACCESS_TOKEN_TTL" env-default:"15m"`
-	RefreshTokenTTL time.Duration `env:"REFRESH_TOKEN_TTL" env-default:"720h"`
-}
-
-type CookieConfig struct {
-	Name   string `env:"COOKIE_NAME" env-default:"session"`
-	Domain string `env:"COOKIE_DOMAIN" env-default:"/"`
-	Path   string `env:"COOKIE_PATH" env-default:"/"`
-
-	Secure   bool `env:"COOKIE_SECURE" env-default:"false"`
-	HTTPOnly bool `env:"COOKIE_HTTP_ONLY" env-default:"true"`
-
-	SameSite string `env:"COOKIE_SAME_SITE" env-default:"Lax"`
+	Secret          string        `env:"AUTH_SECRET" yaml:"-"`
+	AccessTokenTTL  time.Duration `env:"ACCESS_TOKEN_TTL" env-default:"15m" yaml:"access_token_ttl"`
+	RefreshTokenTTL time.Duration `env:"REFRESH_TOKEN_TTL" env-default:"720h" yaml:"refresh_token_ttl"`
 }
 
 func MustLoad() *Config {
@@ -117,6 +105,9 @@ func load() (*Config, error) {
 	var cfg Config
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		return nil, fmt.Errorf("failed to read env vars: %w", err)
+	}
+	if cfg.Auth.Secret == "" {
+		return nil, fmt.Errorf("AUTH_SECRET is required")
 	}
 
 	return &cfg, nil
