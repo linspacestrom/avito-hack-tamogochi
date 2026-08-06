@@ -7,26 +7,33 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// TODO: необходимо поменять на другой builder
-//var psql = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-
 type Repository struct {
-	db     *pgxpool.Pool
-	getter *trmpgx.CtxGetter
+	db      *pgxpool.Pool
+	getter  *trmpgx.CtxGetter
+	User    *UserRepository
+	Pet     *PetRepository
+	Session *SessionRepository
 }
 
-func New(db *pgxpool.Pool, getter *trmpgx.CtxGetter) *Repository {
-	return &Repository{db: db, getter: getter}
+func New(db *pgxpool.Pool) *Repository {
+	r := &Repository{
+		db:     db,
+		getter: trmpgx.DefaultCtxGetter,
+	}
+	r.User = NewUserRepository(r)
+	r.Pet = NewPetRepository(r)
+	r.Session = NewSessionRepository(r)
+	return r
 }
 
 func (r *Repository) Close() {
 	r.db.Close()
 }
 
-func (r *Repository) GetConn(ctx context.Context) trmpgx.Tr {
-	return r.getter.DefaultTrOrDB(ctx, r.db)
-}
-
 func (r *Repository) Ping(ctx context.Context) error {
 	return r.db.Ping(ctx)
+}
+
+func (r *Repository) GetConn(ctx context.Context) trmpgx.Tr {
+	return r.getter.DefaultTrOrDB(ctx, r.db)
 }
