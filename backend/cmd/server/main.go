@@ -11,6 +11,15 @@ import (
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/logger"
 )
 
+// @title Avito Tamagotchi API
+// @version 1.0
+// @description Backend API for Avito Tamagotchi.
+// @BasePath /api
+//
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Enter the token with the "Bearer " prefix, for example: Bearer eyJhbGci...
 func main() {
 	cfg := config.MustLoad()
 
