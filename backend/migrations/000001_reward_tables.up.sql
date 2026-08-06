@@ -4,9 +4,8 @@
 -- yet (pet/auth module owns them). user_id and source_event_id are left as plain UUID columns;
 -- add the FK constraints in a follow-up migration once those tables exist.
 --
--- NOTE: reward_type and value are proposed additions, not yet confirmed with the team (see
--- ARCHITECTURE.md schema, which does not list them) — included now per explicit request to lay
--- the groundwork, to be run past @sonofche separately.
+-- NOTE: reward_type and value are proposed additions to the schema in ARCHITECTURE.md, not yet
+-- confirmed with the team — included now to lay the groundwork, to be confirmed separately.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
