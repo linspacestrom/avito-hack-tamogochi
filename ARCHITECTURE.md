@@ -333,21 +333,22 @@ Unique constraint на `(userId, rewardDefinitionId)` — реализовано
 
 ## Auth-контракт
 
-> ⚠️ **Механизм передачи токена не финален.** JWT в httpOnly cookies был решением созвона
-> 4 августа, но [@linspacestrom](https://github.com/linspacestrom) на созвоне 6 августа сказал, что делать через cookies не
-> будет — возникли сложности с реализацией — и сделает по-другому, конкретный механизм не
-> назвал. Набор ручек ниже (register/login/refresh/logout/me) остаётся актуальным по составу
-> действий, но столбец "Действие" описывает именно cookie-вариант — часть про cookies нужно
-> считать устаревшей до уточнения у [@linspacestrom](https://github.com/linspacestrom). На доске Jira задача SCRUM-8 всё ещё
-> содержит старое описание с cookies — тоже требует обновления после уточнения.
+Cookies не используются. Access-токен — JWT в заголовке `Authorization: Bearer <accessToken>`.
+Refresh-токен передаётся в теле запроса (JSON) и хранится в БД только как SHA-256 hash, не в
+открытом виде. Access TTL по умолчанию 15 минут, refresh TTL — 30 дней; при refresh старая
+refresh-сессия отзывается и создаётся новая пара токенов. Реализовано в PR #10 (ветка
+`release/authorization`, ещё не смёржен).
 
 | Метод | Путь | Вход | Действие |
 |---|---|---|---|
-| POST | `/api/auth/register` | email, password, displayName | Создаёт пользователя, возвращает user (механизм выдачи токена — уточняется) |
-| POST | `/api/auth/login` | email, password | Проверяет пользователя, возвращает user (механизм выдачи токена — уточняется) |
-| POST | `/api/auth/refresh` | refresh-токен | Отзывает старую refresh-сессию, создаёт новую пару токенов, возвращает user |
-| POST | `/api/auth/logout` | — | Отзывает refresh-сессию |
-| GET | `/api/auth/me` | access JWT | Проверяет access JWT, возвращает текущего пользователя |
+| POST | `/api/auth/register` | email, password, displayName (JSON) | Создаёт пользователя, возвращает user + accessToken + refreshToken |
+| POST | `/api/auth/login` | email, password (JSON) | Проверяет пользователя, возвращает user + accessToken + refreshToken |
+| POST | `/api/auth/refresh` | refreshToken (JSON) | Отзывает старую refresh-сессию, создаёт новую пару токенов |
+| POST | `/api/auth/logout` | refreshToken (JSON) | Отзывает refresh-сессию |
+| GET | `/api/auth/me` | заголовок `Authorization: Bearer <accessToken>` | Возвращает текущего пользователя |
+
+Текущий пользователь в защищённых ручках других модулей — через `middleware.RequireAuth` +
+`middleware.UserIDFromContext(ctx)`, уже готовый переиспользуемый механизм.
 
 ## Технический стек
 
@@ -419,3 +420,6 @@ API — вёрстка на моках.
   (этот раздел) — прежний формат плохо масштабировался на несколько созвонов подряд.
 - **6 авг — владелец эпика "Задания".** [@NBx03](https://github.com/NBx03) берёт на себя задания вместе с наградами —
   зафиксировано с задержкой, до этого модуль оставался без владельца.
+- **7 авг — механизм auth подтверждён.** [@linspacestrom](https://github.com/linspacestrom) прислал PR #10: Bearer JWT в
+  заголовке `Authorization`, refresh-токен в JSON-теле и хранится как SHA-256 hash, cookies
+  не используются. Закрывает открытый вопрос с 6 августа.
