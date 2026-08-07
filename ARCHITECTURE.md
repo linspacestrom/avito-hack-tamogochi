@@ -336,8 +336,7 @@ Unique constraint на `(userId, rewardDefinitionId)` — реализовано
 Cookies не используются. Access-токен — JWT в заголовке `Authorization: Bearer <accessToken>`.
 Refresh-токен передаётся в теле запроса (JSON) и хранится в БД только как SHA-256 hash, не в
 открытом виде. Access TTL по умолчанию 15 минут, refresh TTL — 30 дней; при refresh старая
-refresh-сессия отзывается и создаётся новая пара токенов. Реализовано в PR #10 (ветка
-`release/authorization`, ещё не смёржен).
+refresh-сессия отзывается и создаётся новая пара токенов. Реализовано в PR #10.
 
 | Метод | Путь | Вход | Действие |
 |---|---|---|---|
