@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
 )
@@ -11,6 +12,7 @@ import (
 type fakeRepository struct {
 	definitions map[string]*rewards.RewardDefinition
 	created     []rewards.UserReward
+	listResult  []rewards.UserReward
 }
 
 func (f *fakeRepository) GetRewardDefinitionByCode(
@@ -36,7 +38,7 @@ func (f *fakeRepository) ListUserRewards(
 	_ context.Context,
 	_ string,
 ) ([]rewards.UserReward, error) {
-	return nil, nil
+	return f.listResult, nil
 }
 
 func intPtr(v int) *int { return &v }
@@ -112,5 +114,68 @@ func TestIssueReward_Success(t *testing.T) {
 	}
 	if len(repo.created) != 1 {
 		t.Fatalf("expected exactly one CreateUserReward call, got %d", len(repo.created))
+	}
+}
+
+func TestListUserRewards_PastExpiryReportsAsExpired(t *testing.T) {
+	past := time.Now().Add(-time.Hour)
+	repo := &fakeRepository{listResult: []rewards.UserReward{
+		{ID: "r1", Status: rewards.StatusIssued, ExpiresAt: &past},
+	}}
+	svc := rewards.NewService(repo)
+
+	got, err := svc.ListUserRewards(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got[0].Status != rewards.StatusExpired {
+		t.Fatalf("expected status %q, got %q", rewards.StatusExpired, got[0].Status)
+	}
+}
+
+func TestListUserRewards_NotYetExpiredStaysIssued(t *testing.T) {
+	future := time.Now().Add(time.Hour)
+	repo := &fakeRepository{listResult: []rewards.UserReward{
+		{ID: "r1", Status: rewards.StatusIssued, ExpiresAt: &future},
+	}}
+	svc := rewards.NewService(repo)
+
+	got, err := svc.ListUserRewards(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got[0].Status != rewards.StatusIssued {
+		t.Fatalf("expected status %q, got %q", rewards.StatusIssued, got[0].Status)
+	}
+}
+
+func TestListUserRewards_NoExpiryNeverExpires(t *testing.T) {
+	repo := &fakeRepository{listResult: []rewards.UserReward{
+		{ID: "r1", Status: rewards.StatusIssued, ExpiresAt: nil},
+	}}
+	svc := rewards.NewService(repo)
+
+	got, err := svc.ListUserRewards(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got[0].Status != rewards.StatusIssued {
+		t.Fatalf("expected status %q, got %q", rewards.StatusIssued, got[0].Status)
+	}
+}
+
+func TestListUserRewards_RedeemedPastExpiryStaysRedeemed(t *testing.T) {
+	past := time.Now().Add(-time.Hour)
+	repo := &fakeRepository{listResult: []rewards.UserReward{
+		{ID: "r1", Status: rewards.StatusRedeemed, ExpiresAt: &past},
+	}}
+	svc := rewards.NewService(repo)
+
+	got, err := svc.ListUserRewards(context.Background(), "user-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got[0].Status != rewards.StatusRedeemed {
+		t.Fatalf("expiry must not override an already-redeemed reward, got %q", got[0].Status)
 	}
 }

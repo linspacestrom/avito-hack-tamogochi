@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+// UserReward.Status values. Matches the CHECK constraint on user_rewards.status.
+const (
+	StatusIssued   = "issued"
+	StatusRedeemed = "redeemed"
+	StatusExpired  = "expired"
+	StatusRevoked  = "revoked"
+)
+
 // Repository is what Service needs from storage. Implemented by
 // internal/repository/postgres.RewardsRepository.
 type Repository interface {
@@ -54,7 +62,7 @@ func (s *Service) IssueReward(
 		UserID:             userID,
 		RewardDefinitionID: def.ID,
 		SourceEventID:      sourceEventID,
-		Status:             "issued",
+		Status:             StatusIssued,
 		ExpiresAt:          expiresAt,
 	})
 	if err != nil {
@@ -64,7 +72,30 @@ func (s *Service) IssueReward(
 	return reward, nil
 }
 
-// ListUserRewards returns every reward issued to userID, most recent first.
+// ListUserRewards returns every reward issued to userID, most recent first. Rewards past
+// their expiry are reported as StatusExpired even though the stored row still says
+// StatusIssued — expiration is computed lazily on read here, the same "don't write until
+// something forces a write" approach used for pet stat degradation and the daily reward
+// cycle elsewhere in this project. Nothing is written back to the database by this call.
 func (s *Service) ListUserRewards(ctx context.Context, userID string) ([]UserReward, error) {
-	return s.repo.ListUserRewards(ctx, userID)
+	userRewards, err := s.repo.ListUserRewards(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range userRewards {
+		userRewards[i].Status = effectiveStatus(userRewards[i])
+	}
+
+	return userRewards, nil
+}
+
+// effectiveStatus reports StatusExpired for a reward that is still StatusIssued but past its
+// ExpiresAt. Rewards already redeemed or revoked are left alone — expiry only applies to
+// rewards that were never used.
+func effectiveStatus(reward UserReward) string {
+	if reward.Status == StatusIssued && reward.ExpiresAt != nil && reward.ExpiresAt.Before(time.Now()) {
+		return StatusExpired
+	}
+	return reward.Status
 }
