@@ -20,6 +20,7 @@ type Querier interface {
 	// Projection workers consume events in global order when updating read models.
 	ListEventsAfterPosition(ctx context.Context, arg ListEventsAfterPositionParams) ([]EventStore, error)
 	ListEventsByCommandID(ctx context.Context, arg ListEventsByCommandIDParams) ([]EventStore, error)
+	LockEventCommand(ctx context.Context, arg LockEventCommandParams) error
 	// Advances a projection checkpoint after its read model is updated.
 	SaveProjectionCheckpoint(ctx context.Context, arg SaveProjectionCheckpointParams) error
 }

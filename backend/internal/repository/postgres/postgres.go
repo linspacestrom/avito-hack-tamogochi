@@ -13,6 +13,7 @@ type Repository struct {
 	User    *UserRepository
 	Pet     *PetRepository
 	Session *SessionRepository
+	Event   *EventRepository
 }
 
 func New(db *pgxpool.Pool) *Repository {
@@ -23,6 +24,7 @@ func New(db *pgxpool.Pool) *Repository {
 	r.User = NewUserRepository(r)
 	r.Pet = NewPetRepository(r)
 	r.Session = NewSessionRepository(r)
+	r.Event = NewEventRepository(r)
 	return r
 }
 

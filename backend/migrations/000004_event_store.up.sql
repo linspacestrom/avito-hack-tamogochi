@@ -50,8 +50,8 @@ CREATE TABLE event_store (
     recorded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT event_store_aggregate_version_unique
         UNIQUE (aggregate_type, aggregate_id, aggregate_version),
-    CONSTRAINT event_store_command_event_unique
-        UNIQUE (command_id, command_event_index),
+    CONSTRAINT event_store_owner_command_event_unique
+        UNIQUE (owner_user_id, command_id, command_event_index),
     CONSTRAINT event_store_owner_fk
         FOREIGN KEY (owner_user_id) REFERENCES users (id) ON DELETE RESTRICT,
     CONSTRAINT event_store_actor_fk
@@ -94,6 +94,24 @@ CREATE TRIGGER event_store_no_truncate
 BEFORE TRUNCATE ON event_store
 FOR EACH STATEMENT
 EXECUTE FUNCTION reject_event_store_mutation();
+
+CREATE FUNCTION app_api.lock_event_command(
+    p_owner_user_id UUID,
+    p_command_id UUID
+)
+RETURNS VOID
+LANGUAGE sql
+STRICT
+SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+AS $$
+    SELECT pg_catalog.pg_advisory_xact_lock(
+        pg_catalog.hashtextextended(
+            p_owner_user_id::TEXT || ':' || p_command_id::TEXT,
+            0
+        )
+    );
+$$;
 
 CREATE FUNCTION app_api.append_event(
     p_event_id UUID,
@@ -302,6 +320,7 @@ REVOKE ALL ON FUNCTION app_api.append_event(
     UUID, TEXT, UUID, UUID, BIGINT, TEXT, INTEGER, JSONB, JSONB,
     UUID, UUID, SMALLINT, TIMESTAMPTZ
 ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION app_api.lock_event_command(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION app_api.get_event_by_id(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION app_api.list_events_by_command_id(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION app_api.get_aggregate_version(UUID, TEXT, UUID) FROM PUBLIC;
@@ -322,6 +341,7 @@ ALTER TABLE aggregate_streams OWNER TO app_owner;
 ALTER TABLE event_store OWNER TO app_owner;
 ALTER TABLE projection_checkpoints OWNER TO app_owner;
 ALTER FUNCTION reject_event_store_mutation() OWNER TO app_owner;
+ALTER FUNCTION app_api.lock_event_command(UUID, UUID) OWNER TO app_owner;
 ALTER FUNCTION app_api.append_event(
     UUID, TEXT, UUID, UUID, BIGINT, TEXT, INTEGER, JSONB, JSONB,
     UUID, UUID, SMALLINT, TIMESTAMPTZ
@@ -338,6 +358,7 @@ GRANT EXECUTE ON FUNCTION app_api.append_event(
     UUID, TEXT, UUID, UUID, BIGINT, TEXT, INTEGER, JSONB, JSONB,
     UUID, UUID, SMALLINT, TIMESTAMPTZ
 ) TO app_runtime;
+GRANT EXECUTE ON FUNCTION app_api.lock_event_command(UUID, UUID) TO app_runtime;
 GRANT EXECUTE ON FUNCTION app_api.get_event_by_id(UUID, UUID) TO app_runtime;
 GRANT EXECUTE ON FUNCTION app_api.list_events_by_command_id(UUID, UUID) TO app_runtime;
 GRANT EXECUTE ON FUNCTION app_api.get_aggregate_version(UUID, TEXT, UUID) TO app_runtime;

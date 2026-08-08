@@ -302,3 +302,20 @@ func (q *Queries) ListEventsByCommandID(ctx context.Context, arg ListEventsByCom
 	}
 	return items, nil
 }
+
+const lockEventCommand = `-- name: LockEventCommand :exec
+SELECT app_api.lock_event_command(
+    $1::UUID,
+    $2::UUID
+)
+`
+
+type LockEventCommandParams struct {
+	OwnerUserID uuid.UUID `json:"owner_user_id"`
+	CommandID   uuid.UUID `json:"command_id"`
+}
+
+func (q *Queries) LockEventCommand(ctx context.Context, arg LockEventCommandParams) error {
+	_, err := q.db.Exec(ctx, lockEventCommand, arg.OwnerUserID, arg.CommandID)
+	return err
+}

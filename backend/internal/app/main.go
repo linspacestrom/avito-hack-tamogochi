@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/config"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/event"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/handler"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository/postgres"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/router"
@@ -57,7 +58,8 @@ func New(
 		transactionManager,
 		tokenManager,
 	)
-	services := service.New(authService)
+	eventService := event.NewService(repo.Event, transactionManager)
+	services := service.New(authService, eventService)
 	httpHandler := handler.New(log, services.Auth)
 	httpRouter := router.New(httpHandler, authService, log)
 

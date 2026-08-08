@@ -3,6 +3,7 @@ DROP FUNCTION IF EXISTS app_api.list_aggregate_events(UUID, TEXT, UUID, BIGINT, 
 DROP FUNCTION IF EXISTS app_api.get_aggregate_version(UUID, TEXT, UUID);
 DROP FUNCTION IF EXISTS app_api.list_events_by_command_id(UUID, UUID);
 DROP FUNCTION IF EXISTS app_api.get_event_by_id(UUID, UUID);
+DROP FUNCTION IF EXISTS app_api.lock_event_command(UUID, UUID);
 DROP FUNCTION IF EXISTS app_api.append_event(
     UUID, TEXT, UUID, UUID, BIGINT, TEXT, INTEGER, JSONB, JSONB,
     UUID, UUID, SMALLINT, TIMESTAMPTZ

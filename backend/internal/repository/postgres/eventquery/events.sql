@@ -1,3 +1,9 @@
+-- name: LockEventCommand :exec
+SELECT app_api.lock_event_command(
+    sqlc.arg(owner_user_id)::UUID,
+    sqlc.arg(command_id)::UUID
+);
+
 -- name: AppendEvent :one
 -- owner_user_id identifies the user from the authenticated request context.
 SELECT *
