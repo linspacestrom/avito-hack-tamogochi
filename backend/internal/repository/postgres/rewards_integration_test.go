@@ -26,7 +26,9 @@ func TestRewardsRepository_DuplicateIssuanceIsRejected(t *testing.T) {
 	if err != nil {
 		t.Fatalf("connect: %v", err)
 	}
-	defer pool.Close()
+	// t.Cleanup runs LIFO, so register pool.Close() first — it must run last, after the
+	// delete below, otherwise the delete would run against an already-closed pool.
+	t.Cleanup(pool.Close)
 
 	repo := postgres.NewRewardsRepository(pool)
 	svc := rewards.NewService(repo)
