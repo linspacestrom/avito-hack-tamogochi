@@ -1,13 +1,18 @@
 package service
 
-import "context"
+import (
+	"context"
+
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
+)
 
 type Services struct {
-	Auth *AuthService
+	Auth    *AuthService
+	Rewards *rewards.Service
 }
 
-func New(auth *AuthService) *Services {
-	return &Services{Auth: auth}
+func New(auth *AuthService, rewardsService *rewards.Service) *Services {
+	return &Services{Auth: auth, Rewards: rewardsService}
 }
 
 type TransactorFunc func(ctx context.Context, fn func(context.Context) error) error

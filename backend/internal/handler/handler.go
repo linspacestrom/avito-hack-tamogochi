@@ -25,12 +25,13 @@ type AuthService interface {
 }
 
 type Handler struct {
-	log  *slog.Logger
-	auth AuthService
+	log     *slog.Logger
+	auth    AuthService
+	rewards RewardsService
 }
 
-func New(log *slog.Logger, auth AuthService) *Handler {
-	return &Handler{log: log, auth: auth}
+func New(log *slog.Logger, auth AuthService, rewards RewardsService) *Handler {
+	return &Handler{log: log, auth: auth, rewards: rewards}
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {

@@ -34,5 +34,11 @@ func New(
 		r.With(appmiddleware.RequireAuth(auth, log)).Get("/me", h.Me)
 	})
 
+	r.Route("/api/rewards", func(r chi.Router) {
+		r.Use(appmiddleware.RequireAuth(auth, log))
+		r.Post("/issue", h.IssueReward)
+		r.Get("/me", h.ListMyRewards)
+	})
+
 	return r
 }
