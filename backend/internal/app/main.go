@@ -6,9 +6,14 @@ import (
 	"log/slog"
 
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/config"
-	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository"
-	//"github.com/NBx03/avito-hack-tamagotchi/backend/internal/router"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/handler"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository/postgres"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/router"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/server"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/service"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/token"
+	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
+	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
 )
 
 type Repository interface {
@@ -28,25 +33,43 @@ func New(
 	cfg *config.Config,
 ) (*App, error) {
 
-	repo, _, err := repository.New(cfg.Database)
+	pool, err := postgres.NewPool(cfg.Database)
 	if err != nil {
-		return nil, fmt.Errorf("create repository: %w", err)
+		return nil, fmt.Errorf("create postgres pool: %w", err)
 	}
+
+	repo := postgres.New(pool)
+
+	tokenManager, err := token.New(
+		cfg.Auth.Secret,
+		cfg.Auth.AccessTokenTTL,
+		cfg.Auth.RefreshTokenTTL,
+	)
+	if err != nil {
+		repo.Close()
+		return nil, fmt.Errorf("create token manager: %w", err)
+	}
+
+	transactionManager := manager.Must(trmpgx.NewDefaultFactory(pool))
+	authService := service.NewAuthService(
+		repo.User,
+		repo.Session,
+		transactionManager,
+		tokenManager,
+	)
+	services := service.New(authService)
+	httpHandler := handler.New(log, services.Auth)
+	httpRouter := router.New(httpHandler, authService, log)
 
 	log.Info("database connection established",
 		slog.String("host", cfg.Database.Host),
 		slog.String("database", cfg.Database.Database),
 	)
 
-	//httpRouter := router.New(
-	//	log,
-	//	cfg,
-	//)
-
 	api := server.New(
 		log,
 		cfg.HTTP,
-		//httpRouter,
+		httpRouter,
 	)
 
 	return &App{
@@ -66,10 +89,7 @@ func (a *App) Run() error {
 func (a *App) Stop() {
 	a.log.Info("stopping application")
 
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		a.cfg.HTTP.ShutdownTimeout,
-	)
+	ctx, cancel := context.WithTimeout(context.Background(), a.cfg.HTTP.ShutdownTimeout)
 	defer cancel()
 
 	if err := a.server.Close(ctx); err != nil {

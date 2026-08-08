@@ -19,7 +19,7 @@ type Server struct {
 func New(
 	log *slog.Logger,
 	cfg config.HTTPConfig,
-	// handler http.Handler,
+	handler http.Handler,
 ) *Server {
 
 	return &Server{
@@ -28,7 +28,7 @@ func New(
 			ReadTimeout:  cfg.ReadTimeout,
 			WriteTimeout: cfg.WriteTimeout,
 			IdleTimeout:  cfg.IdleTimeout,
-			//Handler:      handler,
+			Handler:      handler,
 		},
 		cfg: cfg,
 		log: log,
