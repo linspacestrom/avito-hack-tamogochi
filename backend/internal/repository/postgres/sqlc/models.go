@@ -9,12 +9,51 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type DailyRewardClaimLog struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	DayNumber          int32
+	RewardDefinitionID uuid.UUID
+	ClaimedAt          pgtype.Timestamptz
+}
+
+type DailyRewardCycle struct {
+	ID                 uuid.UUID
+	DayNumber          int32
+	RewardDefinitionID uuid.UUID
+}
+
 type RefreshSession struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
 	TokenHash []byte
 	ExpiresAt pgtype.Timestamptz
 	CreatedAt pgtype.Timestamptz
+}
+
+type RewardDefinition struct {
+	ID            uuid.UUID
+	Code          string
+	Title         string
+	Description   string
+	RequiredLevel int32
+	ValidityDays  pgtype.Int4
+	IsActive      bool
+	RewardType    string
+	Value         []byte
+}
+
+type TaskDefinition struct {
+	ID                 uuid.UUID
+	Code               string
+	Type               string
+	Title              string
+	Description        string
+	TargetMetric       string
+	TargetValue        int32
+	RewardDefinitionID uuid.UUID
+	ResetPeriod        pgtype.Text
+	IsActive           bool
 }
 
 type User struct {
@@ -25,4 +64,34 @@ type User struct {
 	Status       string
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+}
+
+type UserDailyRewardProgress struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	CurrentDay     int32
+	CycleStartedAt pgtype.Timestamptz
+	LastClaimedAt  pgtype.Timestamptz
+}
+
+type UserReward struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	RewardDefinitionID uuid.UUID
+	SourceEventID      pgtype.UUID
+	Status             string
+	IssuedAt           pgtype.Timestamptz
+	ExpiresAt          pgtype.Timestamptz
+	RedeemedAt         pgtype.Timestamptz
+}
+
+type UserTaskProgress struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	TaskDefinitionID uuid.UUID
+	CurrentValue     int32
+	Status           string
+	CompletedAt      pgtype.Timestamptz
+	ClaimedAt        pgtype.Timestamptz
+	PeriodStartedAt  pgtype.Timestamptz
 }
