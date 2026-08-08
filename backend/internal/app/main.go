@@ -9,6 +9,7 @@ import (
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/event"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/handler"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository/postgres"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/router"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/server"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/service"
@@ -59,8 +60,10 @@ func New(
 		tokenManager,
 	)
 	eventService := event.NewService(repo.Event, transactionManager)
-	services := service.New(authService, eventService)
-	httpHandler := handler.New(log, services.Auth)
+	rewardsService := rewards.NewService(repo.Rewards)
+	dailyCycleService := rewards.NewDailyCycleService(repo.Rewards, transactionManager)
+	services := service.New(authService, eventService, rewardsService, dailyCycleService)
+	httpHandler := handler.New(log, services.Auth, services.Rewards, services.DailyCycle)
 	httpRouter := router.New(httpHandler, authService, log)
 
 	log.Info("database connection established",

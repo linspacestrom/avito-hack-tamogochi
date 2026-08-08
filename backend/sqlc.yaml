@@ -2,7 +2,7 @@ version: "2"
 sql:
   - engine: "postgresql"
     queries: "internal/repository/postgres/query"
-    schema: "migrations/000001_auth.up.sql"
+    schema: "migrations/*.up.sql"
     gen:
       go:
         package: "db"
@@ -19,8 +19,8 @@ sql:
   - engine: "postgresql"
     queries: "internal/repository/postgres/eventquery"
     schema:
-      - "migrations/000001_auth.up.sql"
-      - "migrations/000004_event_store.up.sql"
+      - "migrations/000002_auth.up.sql"
+      - "migrations/000009_event_store.up.sql"
     gen:
       go:
         package: "eventsqlc"

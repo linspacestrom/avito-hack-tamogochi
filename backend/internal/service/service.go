@@ -4,15 +4,28 @@ import (
 	"context"
 
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/event"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
 )
 
 type Services struct {
-	Auth  *AuthService
-	Event *event.Service
+	Auth       *AuthService
+	Event      *event.Service
+	Rewards    *rewards.Service
+	DailyCycle *rewards.DailyCycleService
 }
 
-func New(auth *AuthService, eventService *event.Service) *Services {
-	return &Services{Auth: auth, Event: eventService}
+func New(
+	auth *AuthService,
+	eventService *event.Service,
+	rewardsService *rewards.Service,
+	dailyCycle *rewards.DailyCycleService,
+) *Services {
+	return &Services{
+		Auth:       auth,
+		Event:      eventService,
+		Rewards:    rewardsService,
+		DailyCycle: dailyCycle,
+	}
 }
 
 type TransactorFunc func(ctx context.Context, fn func(context.Context) error) error
