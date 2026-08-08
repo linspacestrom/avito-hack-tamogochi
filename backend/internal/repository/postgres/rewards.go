@@ -16,7 +16,7 @@ const uniqueViolationCode = "23505"
 // RewardsRepository is a sub-repository of Repository, matching the pattern used by
 // UserRepository/SessionRepository/PetRepository — it goes through r.repo.GetConn(ctx) so it
 // participates correctly in the shared trm transaction manager, and uses sqlc-generated
-// queries instead of raw pgx (see the note in sqlc/models.go about how those were produced).
+// queries instead of raw pgx.
 type RewardsRepository struct {
 	repo *Repository
 }

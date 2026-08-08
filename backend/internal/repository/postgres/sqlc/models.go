@@ -9,13 +9,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-// ⚠️ Everything below this point (through the end of the file) is hand-authored, not real
-// sqlc output — the sqlc CLI can't be installed in this environment (go install fails
-// linking its CGO-based SQL parser dependency on this machine's MinGW toolchain). Written to
-// match sqlc's actual output conventions as closely as possible from the existing generated
-// files above. Whoever has a working sqlc toolchain should run `sqlc generate` for real once
-// possible — that will regenerate this whole file from internal/repository/postgres/query/,
-// which should reconcile cleanly with what's added here since the same queries are the input.
+type DailyRewardClaimLog struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	DayNumber          int32
+	RewardDefinitionID uuid.UUID
+	ClaimedAt          pgtype.Timestamptz
+}
+
+type DailyRewardCycle struct {
+	ID                 uuid.UUID
+	DayNumber          int32
+	RewardDefinitionID uuid.UUID
+}
 
 type RefreshSession struct {
 	ID        uuid.UUID
@@ -23,16 +29,6 @@ type RefreshSession struct {
 	TokenHash []byte
 	ExpiresAt pgtype.Timestamptz
 	CreatedAt pgtype.Timestamptz
-}
-
-type User struct {
-	ID           uuid.UUID
-	Email        string
-	DisplayName  string
-	PasswordHash string
-	Status       string
-	CreatedAt    pgtype.Timestamptz
-	UpdatedAt    pgtype.Timestamptz
 }
 
 type RewardDefinition struct {
@@ -47,6 +43,37 @@ type RewardDefinition struct {
 	Value         []byte
 }
 
+type TaskDefinition struct {
+	ID                 uuid.UUID
+	Code               string
+	Type               string
+	Title              string
+	Description        string
+	TargetMetric       string
+	TargetValue        int32
+	RewardDefinitionID uuid.UUID
+	ResetPeriod        pgtype.Text
+	IsActive           bool
+}
+
+type User struct {
+	ID           uuid.UUID
+	Email        string
+	DisplayName  string
+	PasswordHash string
+	Status       string
+	CreatedAt    pgtype.Timestamptz
+	UpdatedAt    pgtype.Timestamptz
+}
+
+type UserDailyRewardProgress struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	CurrentDay     int32
+	CycleStartedAt pgtype.Timestamptz
+	LastClaimedAt  pgtype.Timestamptz
+}
+
 type UserReward struct {
 	ID                 uuid.UUID
 	UserID             uuid.UUID
@@ -58,9 +85,13 @@ type UserReward struct {
 	RedeemedAt         pgtype.Timestamptz
 }
 
-type UserDailyRewardProgress struct {
-	UserID         uuid.UUID
-	CurrentDay     int32
-	CycleStartedAt pgtype.Timestamptz
-	LastClaimedAt  pgtype.Timestamptz
+type UserTaskProgress struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	TaskDefinitionID uuid.UUID
+	CurrentValue     int32
+	Status           string
+	CompletedAt      pgtype.Timestamptz
+	ClaimedAt        pgtype.Timestamptz
+	PeriodStartedAt  pgtype.Timestamptz
 }

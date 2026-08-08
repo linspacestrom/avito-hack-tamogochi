@@ -15,7 +15,7 @@ type Querier interface {
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserReward(ctx context.Context, arg CreateUserRewardParams) (UserReward, error)
 	DeleteRefreshSession(ctx context.Context, tokenHash []byte) (int64, error)
-	GetDailyRewardProgress(ctx context.Context, userID uuid.UUID) (UserDailyRewardProgress, error)
+	GetDailyRewardProgress(ctx context.Context, userID uuid.UUID) (GetDailyRewardProgressRow, error)
 	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash []byte) (RefreshSession, error)
 	GetRewardDefinitionByCode(ctx context.Context, code string) (RewardDefinition, error)
 	GetRewardForDay(ctx context.Context, dayNumber int32) (RewardDefinition, error)

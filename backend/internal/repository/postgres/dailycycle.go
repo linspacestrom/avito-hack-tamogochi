@@ -90,7 +90,7 @@ func (r *RewardsRepository) LogClaim(
 	})
 }
 
-func dailyRewardProgressFromDB(p db.UserDailyRewardProgress) rewards.UserDailyRewardProgress {
+func dailyRewardProgressFromDB(p db.GetDailyRewardProgressRow) rewards.UserDailyRewardProgress {
 	return rewards.UserDailyRewardProgress{
 		UserID:         uuidToString(p.UserID),
 		CurrentDay:     int(p.CurrentDay),
