@@ -1,5 +1,5 @@
 -- task_definitions and user_task_progress, per ARCHITECTURE.md schema (TaskDefinition /
--- UserTaskProgress) — backbone of the "Задания" epic.
+-- UserTaskProgress) — backbone of the "Задания" feature.
 --
 -- Same catalog-vs-per-user-progress split as reward_definitions/user_rewards and
 -- daily_reward_cycle/user_daily_reward_progress: task_definitions is the shared list of
