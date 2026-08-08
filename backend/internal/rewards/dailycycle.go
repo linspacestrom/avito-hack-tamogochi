@@ -43,14 +43,31 @@ type DailyCycleRepository interface {
 	GetRewardForDay(ctx context.Context, dayNumber int) (*RewardDefinition, error)
 	// UpsertProgress creates the row on first claim, updates it on every claim after.
 	UpsertProgress(ctx context.Context, progress UserDailyRewardProgress) error
+	// LogClaim appends a permanent record of a successful claim — see the note on ClaimToday
+	// about why this can't just live in UserDailyRewardProgress.
+	LogClaim(
+		ctx context.Context,
+		userID string,
+		dayNumber int,
+		rewardDefinitionID string,
+		claimedAt time.Time,
+	) error
+}
+
+// Transactor runs fn atomically. Implemented by *manager.Manager (go-transaction-manager),
+// the same value AuthService is given in app/main.go — defined locally rather than imported
+// from the service package to avoid an import cycle (service already imports rewards).
+type Transactor interface {
+	Do(ctx context.Context, fn func(context.Context) error) error
 }
 
 type DailyCycleService struct {
-	repo DailyCycleRepository
+	repo       DailyCycleRepository
+	transactor Transactor
 }
 
-func NewDailyCycleService(repo DailyCycleRepository) *DailyCycleService {
-	return &DailyCycleService{repo: repo}
+func NewDailyCycleService(repo DailyCycleRepository, transactor Transactor) *DailyCycleService {
+	return &DailyCycleService{repo: repo, transactor: transactor}
 }
 
 // GetStatus returns the day the user is currently on and whether they can claim right now.
@@ -83,10 +100,12 @@ func (s *DailyCycleService) GetStatus(ctx context.Context, userID string) (*Dail
 // are deliberately reused across multiple days and across repeats of the 14-day cycle, which
 // is incompatible with the (userId, rewardDefinitionId) uniqueness that protects the
 // achievement-style rewards in user_rewards — reusing that table would silently block every
-// repeat claim after the first. user_daily_reward_progress is the record of what's been
-// claimed and when. If a persistent history of daily claims is needed later (e.g. for the
-// "ежедневная сводка" feature to show "reward earned yesterday"), that needs its own
-// append-only table — flagging this rather than solving it here, out of scope for this task.
+// repeat claim after the first. Instead, every successful claim is appended to
+// daily_reward_claim_log (see LogClaim) — that's the durable history "earned yesterday"
+// style features should query, not user_daily_reward_progress, which only holds current state.
+//
+// The progress update and the log entry are written in one transaction: either both happen
+// or neither does, so the log can never drift from what current-day advancement says happened.
 func (s *DailyCycleService) ClaimToday(ctx context.Context, userID string) (*RewardDefinition, error) {
 	progress, err := s.repo.GetProgress(ctx, userID)
 	if err != nil {
@@ -118,7 +137,13 @@ func (s *DailyCycleService) ClaimToday(ctx context.Context, userID string) (*Rew
 		updated.CycleStartedAt = progress.CycleStartedAt
 	}
 
-	if err := s.repo.UpsertProgress(ctx, updated); err != nil {
+	err = s.transactor.Do(ctx, func(txCtx context.Context) error {
+		if err := s.repo.UpsertProgress(txCtx, updated); err != nil {
+			return err
+		}
+		return s.repo.LogClaim(txCtx, userID, day, reward.ID, now)
+	})
+	if err != nil {
 		return nil, err
 	}
 

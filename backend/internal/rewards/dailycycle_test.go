@@ -51,9 +51,27 @@ func (f *fakeDailyCycleRepository) UpsertProgress(
 	return nil
 }
 
+func (f *fakeDailyCycleRepository) LogClaim(
+	_ context.Context,
+	_ string,
+	_ int,
+	_ string,
+	_ time.Time,
+) error {
+	return nil
+}
+
+// fakeTransactor just runs fn directly — an in-memory fake repository has no real
+// transactions to coordinate, so there's nothing for it to do beyond satisfying the interface.
+type fakeTransactor struct{}
+
+func (fakeTransactor) Do(ctx context.Context, fn func(context.Context) error) error {
+	return fn(ctx)
+}
+
 func TestDailyCycle_FirstClaimEverStartsAtDayOne(t *testing.T) {
 	repo := newFakeDailyCycleRepository()
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 
 	status, err := svc.GetStatus(context.Background(), "user-1")
 	if err != nil {
@@ -66,7 +84,7 @@ func TestDailyCycle_FirstClaimEverStartsAtDayOne(t *testing.T) {
 
 func TestDailyCycle_ClaimAdvancesToNextDay(t *testing.T) {
 	repo := newFakeDailyCycleRepository()
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 	ctx := context.Background()
 
 	if _, err := svc.ClaimToday(ctx, "user-1"); err != nil {
@@ -87,7 +105,7 @@ func TestDailyCycle_ClaimAdvancesToNextDay(t *testing.T) {
 
 func TestDailyCycle_ClaimingTwiceTooSoonFails(t *testing.T) {
 	repo := newFakeDailyCycleRepository()
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 	ctx := context.Background()
 
 	if _, err := svc.ClaimToday(ctx, "user-1"); err != nil {
@@ -109,7 +127,7 @@ func TestDailyCycle_ClaimingOnScheduleAdvancesNormally(t *testing.T) {
 		CycleStartedAt: time.Now().Add(-72 * time.Hour),
 		LastClaimedAt:  &claimedAt,
 	}
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 
 	status, err := svc.GetStatus(context.Background(), "user-1")
 	if err != nil {
@@ -129,7 +147,7 @@ func TestDailyCycle_MissingADayResetsToDayOne(t *testing.T) {
 		CycleStartedAt: time.Now().Add(-96 * time.Hour),
 		LastClaimedAt:  &claimedAt,
 	}
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 	ctx := context.Background()
 
 	status, err := svc.GetStatus(ctx, "user-1")
@@ -157,7 +175,7 @@ func TestDailyCycle_Day14WrapsAroundToDayOne(t *testing.T) {
 		CycleStartedAt: time.Now().Add(-13 * 24 * time.Hour),
 		LastClaimedAt:  &claimedAt,
 	}
-	svc := rewards.NewDailyCycleService(repo)
+	svc := rewards.NewDailyCycleService(repo, fakeTransactor{})
 
 	if _, err := svc.ClaimToday(context.Background(), "user-1"); err != nil {
 		t.Fatalf("unexpected error: %v", err)

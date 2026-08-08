@@ -2,51 +2,34 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 
+	db "github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository/postgres/sqlc"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const uniqueViolationCode = "23505"
 
-// RewardsRepository is a standalone implementation using raw pgx queries — it is not yet
-// wired into the shared Repository struct (that struct is being rebuilt in PR #10) and does
-// not yet use sqlc (sqlc.yaml lands in the same PR). Once #10 merges, this should move onto
-// the same sqlc-generated pattern as the rest of the repositories, and get a Rewards field
-// on the shared Repository struct.
+// RewardsRepository is a sub-repository of Repository, matching the pattern used by
+// UserRepository/SessionRepository/PetRepository — it goes through r.repo.GetConn(ctx) so it
+// participates correctly in the shared trm transaction manager, and uses sqlc-generated
+// queries instead of raw pgx (see the note in sqlc/models.go about how those were produced).
 type RewardsRepository struct {
-	db *pgxpool.Pool
+	repo *Repository
 }
 
-func NewRewardsRepository(db *pgxpool.Pool) *RewardsRepository {
-	return &RewardsRepository{db: db}
+func NewRewardsRepository(repo *Repository) *RewardsRepository {
+	return &RewardsRepository{repo: repo}
 }
 
 func (r *RewardsRepository) GetRewardDefinitionByCode(
 	ctx context.Context,
 	code string,
 ) (*rewards.RewardDefinition, error) {
-	const query = `
-		SELECT id::text, code, title, description, required_level, validity_days, is_active,
-			reward_type, value
-		FROM reward_definitions
-		WHERE code = $1`
-
-	var def rewards.RewardDefinition
-	err := r.db.QueryRow(ctx, query, code).Scan(
-		&def.ID,
-		&def.Code,
-		&def.Title,
-		&def.Description,
-		&def.RequiredLevel,
-		&def.ValidityDays,
-		&def.IsActive,
-		&def.RewardType,
-		&def.Value,
-	)
+	row, err := db.New(r.repo.GetConn(ctx)).GetRewardDefinitionByCode(ctx, code)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, rewards.ErrRewardNotFound
 	}
@@ -54,25 +37,34 @@ func (r *RewardsRepository) GetRewardDefinitionByCode(
 		return nil, err
 	}
 
-	return &def, nil
+	result := rewardDefinitionFromDB(row)
+	return &result, nil
 }
 
 func (r *RewardsRepository) CreateUserReward(
 	ctx context.Context,
 	reward rewards.UserReward,
 ) (*rewards.UserReward, error) {
-	const query = `
-		INSERT INTO user_rewards (user_id, reward_definition_id, source_event_id, status, expires_at)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id::text, issued_at`
+	userID, err := stringToUUID(reward.UserID)
+	if err != nil {
+		return nil, err
+	}
+	rewardDefinitionID, err := stringToUUID(reward.RewardDefinitionID)
+	if err != nil {
+		return nil, err
+	}
+	sourceEventID, err := stringPtrToNullableUUID(reward.SourceEventID)
+	if err != nil {
+		return nil, err
+	}
 
-	err := r.db.QueryRow(ctx, query,
-		reward.UserID,
-		reward.RewardDefinitionID,
-		reward.SourceEventID,
-		reward.Status,
-		reward.ExpiresAt,
-	).Scan(&reward.ID, &reward.IssuedAt)
+	row, err := db.New(r.repo.GetConn(ctx)).CreateUserReward(ctx, db.CreateUserRewardParams{
+		UserID:             userID,
+		RewardDefinitionID: rewardDefinitionID,
+		SourceEventID:      sourceEventID,
+		Status:             reward.Status,
+		ExpiresAt:          timePtrToTimestamptz(reward.ExpiresAt),
+	})
 	if err != nil {
 		if isUniqueViolation(err) {
 			return nil, rewards.ErrAlreadyIssued
@@ -80,45 +72,56 @@ func (r *RewardsRepository) CreateUserReward(
 		return nil, err
 	}
 
-	return &reward, nil
+	result := userRewardFromDB(row)
+	return &result, nil
 }
 
 func (r *RewardsRepository) ListUserRewards(
 	ctx context.Context,
 	userID string,
 ) ([]rewards.UserReward, error) {
-	const query = `
-		SELECT id::text, user_id::text, reward_definition_id::text, source_event_id::text,
-			status, issued_at, expires_at, redeemed_at
-		FROM user_rewards
-		WHERE user_id = $1
-		ORDER BY issued_at DESC`
-
-	rows, err := r.db.Query(ctx, query, userID)
+	id, err := stringToUUID(userID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var result []rewards.UserReward
-	for rows.Next() {
-		var ur rewards.UserReward
-		if err := rows.Scan(
-			&ur.ID,
-			&ur.UserID,
-			&ur.RewardDefinitionID,
-			&ur.SourceEventID,
-			&ur.Status,
-			&ur.IssuedAt,
-			&ur.ExpiresAt,
-			&ur.RedeemedAt,
-		); err != nil {
-			return nil, err
-		}
-		result = append(result, ur)
+	rows, err := db.New(r.repo.GetConn(ctx)).ListUserRewards(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 
-	return result, rows.Err()
+	result := make([]rewards.UserReward, 0, len(rows))
+	for _, row := range rows {
+		result = append(result, userRewardFromDB(row))
+	}
+	return result, nil
+}
+
+func rewardDefinitionFromDB(def db.RewardDefinition) rewards.RewardDefinition {
+	return rewards.RewardDefinition{
+		ID:            uuidToString(def.ID),
+		Code:          def.Code,
+		Title:         def.Title,
+		Description:   def.Description,
+		RequiredLevel: int(def.RequiredLevel),
+		ValidityDays:  int4ToIntPtr(def.ValidityDays),
+		IsActive:      def.IsActive,
+		RewardType:    def.RewardType,
+		Value:         json.RawMessage(def.Value),
+	}
+}
+
+func userRewardFromDB(reward db.UserReward) rewards.UserReward {
+	return rewards.UserReward{
+		ID:                 uuidToString(reward.ID),
+		UserID:             uuidToString(reward.UserID),
+		RewardDefinitionID: uuidToString(reward.RewardDefinitionID),
+		SourceEventID:      nullableUUIDToStringPtr(reward.SourceEventID),
+		Status:             reward.Status,
+		IssuedAt:           reward.IssuedAt.Time,
+		ExpiresAt:          timestamptzToTimePtr(reward.ExpiresAt),
+		RedeemedAt:         timestamptzToTimePtr(reward.RedeemedAt),
+	}
 }
 
 func isUniqueViolation(err error) bool {

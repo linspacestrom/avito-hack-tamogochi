@@ -24,7 +24,7 @@ func New(db *pgxpool.Pool) *Repository {
 	r.User = NewUserRepository(r)
 	r.Pet = NewPetRepository(r)
 	r.Session = NewSessionRepository(r)
-	r.Rewards = NewRewardsRepository(db)
+	r.Rewards = NewRewardsRepository(r)
 	return r
 }
 

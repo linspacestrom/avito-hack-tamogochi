@@ -9,6 +9,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// ⚠️ Everything below this point (through the end of the file) is hand-authored, not real
+// sqlc output — the sqlc CLI can't be installed in this environment (go install fails
+// linking its CGO-based SQL parser dependency on this machine's MinGW toolchain). Written to
+// match sqlc's actual output conventions as closely as possible from the existing generated
+// files above. Whoever has a working sqlc toolchain should run `sqlc generate` for real once
+// possible — that will regenerate this whole file from internal/repository/postgres/query/,
+// which should reconcile cleanly with what's added here since the same queries are the input.
+
 type RefreshSession struct {
 	ID        uuid.UUID
 	UserID    uuid.UUID
@@ -25,4 +33,34 @@ type User struct {
 	Status       string
 	CreatedAt    pgtype.Timestamptz
 	UpdatedAt    pgtype.Timestamptz
+}
+
+type RewardDefinition struct {
+	ID            uuid.UUID
+	Code          string
+	Title         string
+	Description   string
+	RequiredLevel int32
+	ValidityDays  pgtype.Int4
+	IsActive      bool
+	RewardType    string
+	Value         []byte
+}
+
+type UserReward struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	RewardDefinitionID uuid.UUID
+	SourceEventID      pgtype.UUID
+	Status             string
+	IssuedAt           pgtype.Timestamptz
+	ExpiresAt          pgtype.Timestamptz
+	RedeemedAt         pgtype.Timestamptz
+}
+
+type UserDailyRewardProgress struct {
+	UserID         uuid.UUID
+	CurrentDay     int32
+	CycleStartedAt pgtype.Timestamptz
+	LastClaimedAt  pgtype.Timestamptz
 }

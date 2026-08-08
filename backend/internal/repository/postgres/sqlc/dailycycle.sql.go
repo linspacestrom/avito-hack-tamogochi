@@ -1,0 +1,102 @@
+// ⚠️ Hand-authored, not real sqlc output — see the note in models.go.
+// source: dailycycle.sql
+
+package db
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+const getDailyRewardProgress = `-- name: GetDailyRewardProgress :one
+SELECT user_id, current_day, cycle_started_at, last_claimed_at
+FROM user_daily_reward_progress
+WHERE user_id = $1
+`
+
+func (q *Queries) GetDailyRewardProgress(ctx context.Context, userID uuid.UUID) (UserDailyRewardProgress, error) {
+	row := q.db.QueryRow(ctx, getDailyRewardProgress, userID)
+	var i UserDailyRewardProgress
+	err := row.Scan(
+		&i.UserID,
+		&i.CurrentDay,
+		&i.CycleStartedAt,
+		&i.LastClaimedAt,
+	)
+	return i, err
+}
+
+const getRewardForDay = `-- name: GetRewardForDay :one
+SELECT rd.id, rd.code, rd.title, rd.description, rd.required_level, rd.validity_days,
+    rd.is_active, rd.reward_type, rd.value
+FROM daily_reward_cycle drc
+JOIN reward_definitions rd ON rd.id = drc.reward_definition_id
+WHERE drc.day_number = $1
+`
+
+func (q *Queries) GetRewardForDay(ctx context.Context, dayNumber int32) (RewardDefinition, error) {
+	row := q.db.QueryRow(ctx, getRewardForDay, dayNumber)
+	var i RewardDefinition
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.Title,
+		&i.Description,
+		&i.RequiredLevel,
+		&i.ValidityDays,
+		&i.IsActive,
+		&i.RewardType,
+		&i.Value,
+	)
+	return i, err
+}
+
+const upsertDailyRewardProgress = `-- name: UpsertDailyRewardProgress :exec
+INSERT INTO user_daily_reward_progress (user_id, current_day, cycle_started_at, last_claimed_at)
+VALUES ($1, $2, $3, $4)
+ON CONFLICT (user_id) DO UPDATE SET
+    current_day = EXCLUDED.current_day,
+    cycle_started_at = EXCLUDED.cycle_started_at,
+    last_claimed_at = EXCLUDED.last_claimed_at
+`
+
+type UpsertDailyRewardProgressParams struct {
+	UserID         uuid.UUID
+	CurrentDay     int32
+	CycleStartedAt pgtype.Timestamptz
+	LastClaimedAt  pgtype.Timestamptz
+}
+
+func (q *Queries) UpsertDailyRewardProgress(ctx context.Context, arg UpsertDailyRewardProgressParams) error {
+	_, err := q.db.Exec(ctx, upsertDailyRewardProgress,
+		arg.UserID,
+		arg.CurrentDay,
+		arg.CycleStartedAt,
+		arg.LastClaimedAt,
+	)
+	return err
+}
+
+const logDailyRewardClaim = `-- name: LogDailyRewardClaim :exec
+INSERT INTO daily_reward_claim_log (user_id, day_number, reward_definition_id, claimed_at)
+VALUES ($1, $2, $3, $4)
+`
+
+type LogDailyRewardClaimParams struct {
+	UserID             uuid.UUID
+	DayNumber          int32
+	RewardDefinitionID uuid.UUID
+	ClaimedAt          pgtype.Timestamptz
+}
+
+func (q *Queries) LogDailyRewardClaim(ctx context.Context, arg LogDailyRewardClaimParams) error {
+	_, err := q.db.Exec(ctx, logDailyRewardClaim,
+		arg.UserID,
+		arg.DayNumber,
+		arg.RewardDefinitionID,
+		arg.ClaimedAt,
+	)
+	return err
+}
