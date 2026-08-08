@@ -7,12 +7,17 @@ import (
 )
 
 type Services struct {
-	Auth    *AuthService
-	Rewards *rewards.Service
+	Auth       *AuthService
+	Rewards    *rewards.Service
+	DailyCycle *rewards.DailyCycleService
 }
 
-func New(auth *AuthService, rewardsService *rewards.Service) *Services {
-	return &Services{Auth: auth, Rewards: rewardsService}
+func New(
+	auth *AuthService,
+	rewardsService *rewards.Service,
+	dailyCycle *rewards.DailyCycleService,
+) *Services {
+	return &Services{Auth: auth, Rewards: rewardsService, DailyCycle: dailyCycle}
 }
 
 type TransactorFunc func(ctx context.Context, fn func(context.Context) error) error

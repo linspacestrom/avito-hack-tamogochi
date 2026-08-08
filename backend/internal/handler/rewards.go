@@ -102,6 +102,8 @@ func (h *Handler) handleRewardsError(w http.ResponseWriter, err error) {
 		writeError(w, http.StatusBadRequest, "user level is below the reward's required level")
 	case errors.Is(err, rewards.ErrAlreadyIssued):
 		writeError(w, http.StatusConflict, "reward already issued to this user")
+	case errors.Is(err, rewards.ErrTooSoonToClaim):
+		writeError(w, http.StatusConflict, "daily reward already claimed, come back later")
 	default:
 		h.log.Error("rewards request failed", "error", err)
 		writeError(w, http.StatusInternalServerError, "internal server error")

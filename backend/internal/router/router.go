@@ -38,6 +38,8 @@ func New(
 		r.Use(appmiddleware.RequireAuth(auth, log))
 		r.Post("/issue", h.IssueReward)
 		r.Get("/me", h.ListMyRewards)
+		r.Get("/daily-status", h.DailyStatus)
+		r.Post("/daily-claim", h.DailyClaim)
 	})
 
 	return r

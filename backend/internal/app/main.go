@@ -59,8 +59,9 @@ func New(
 		tokenManager,
 	)
 	rewardsService := rewards.NewService(repo.Rewards)
-	services := service.New(authService, rewardsService)
-	httpHandler := handler.New(log, services.Auth, services.Rewards)
+	dailyCycleService := rewards.NewDailyCycleService(repo.Rewards)
+	services := service.New(authService, rewardsService, dailyCycleService)
+	httpHandler := handler.New(log, services.Auth, services.Rewards, services.DailyCycle)
 	httpRouter := router.New(httpHandler, authService, log)
 
 	log.Info("database connection established",
