@@ -15,4 +15,10 @@
     justify-content: center;
 
     gap: 24px;
+
+    padding: 10px;
+}
+
+.sceneWrapper {
+    position: relative;
 }

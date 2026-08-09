@@ -18,14 +18,28 @@
 }
 
 
-.cat {
+.catWrapper {
     position: absolute;
 
     width: 59%;
+    height: 75%;
 
-    left: 20%;
+    left: 50%;
+    bottom: 0;
 
-    bottom: -3%;
+    transform: translateX(-50%);
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.cat {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+    object-position: center bottom;
 
     transform-origin: center bottom;
 

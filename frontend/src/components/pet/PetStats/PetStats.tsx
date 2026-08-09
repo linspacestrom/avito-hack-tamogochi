@@ -2,45 +2,55 @@ import type { Pet } from "../../../types/pet";
 
 import styles from "./PetStats.module.css";
 
-
 interface Props {
     pet: Pet;
 }
-
 
 function PetStats({ pet }: Props) {
     return (
         <aside className={styles.stats}>
 
+
             <div className={styles.level}>
 
-                <h2>УРОВЕНЬ</h2>
 
-                <div className={styles.levelRow}>
+                <div className={styles.levelNumber}>
+                    {pet.level} уровень
+                </div>
 
-                    <strong>
-                        {pet.level}
-                    </strong>
 
-                    <div className={styles.progress}>
-                        <div
-                            className={styles.progressFill}
-                            style={{
-                                width: `${(pet.experience / 2000) * 100}%`
-                            }}
-                        />
-                    </div>
+                <div className={styles.progress}>
+
+                    <div
+                        className={styles.progressFill}
+                        style={{
+                            width: `${(pet.experience / 2000) * 100}%`
+                        }}
+                    />
 
                 </div>
 
 
-                <p>
-                    {pet.experience} / 2000
-                </p>
+                <div className={styles.exp}>
+
+
+                    <span>
+                        {pet.experience} / 2000 
+                    </span>
+
+                    <img
+                        src="/hp.png"
+                        alt="Опыт"
+                    />
+
+                </div>
+
 
             </div>
 
 
+
+            {/* СЫТОСТЬ */}
 
             <div className={styles.stat}>
 
@@ -56,7 +66,7 @@ function PetStats({ pet }: Props) {
                     </span>
 
                     <b>
-                        {pet.health}/100
+                        {pet.hunger}/100
                     </b>
 
                 </div>
@@ -67,7 +77,7 @@ function PetStats({ pet }: Props) {
                     <div
                         className={styles.hungerFill}
                         style={{
-                            width: `${pet.health}%`
+                            width: `${pet.hunger}%`
                         }}
                     />
 
@@ -76,6 +86,46 @@ function PetStats({ pet }: Props) {
             </div>
 
 
+
+            {/* ЭНЕРГИЯ */}
+
+            <div className={styles.stat}>
+
+                <div className={styles.statHeader}>
+
+                    <img
+                        src="/energy.png"
+                        alt="Энергия"
+                    />
+
+                    <span>
+                        ЭНЕРГИЯ
+                    </span>
+
+                    <b>
+                        {pet.energy}/100
+                    </b>
+
+                </div>
+
+
+                <div className={styles.bar}>
+
+                    <div
+                        className={styles.energyFill}
+                        style={{
+                            width: `${pet.energy}%`
+                        }}
+                    />
+
+                </div>
+
+            </div>
+
+
+
+
+            {/* НАСТРОЕНИЕ */}
 
             <div className={styles.stat}>
 
@@ -114,6 +164,5 @@ function PetStats({ pet }: Props) {
         </aside>
     );
 }
-
 
 export default PetStats;

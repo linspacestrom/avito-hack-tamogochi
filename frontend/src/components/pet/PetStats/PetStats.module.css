@@ -1,64 +1,67 @@
 .stats {
-    width: 260px;
+    width: 280px;
 
     display: flex;
 
     flex-direction: column;
 
-    gap: 16px;
-    
+    gap: 18px;
 }
 
 
 .level,
 .stat {
 
-    background: #fff;
+    background: white;
 
-    border-radius: 24px;
+    border-radius: 28px;
 
-    padding: 20px;
+    padding: 22px;
 
-    border: 1px solid black;
+    border: 2px solid #222;
+
+    box-shadow: 0 5px 0 rgba(0,0,0,0.08);
 
 }
 
 
 h2 {
 
-    margin: 0;
+    margin: 0 0 10px;
 
-    font-size: 18px;
-
-}
-
-
-.levelRow {
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 20px;
+    font-size: 20px;
 
 }
 
 
-.levelRow strong {
+.levelNumber {
 
-    font-size: 48px;
+    font-size: 64px;
 
+    font-weight: 800;
+
+    line-height: 1;
+
+    margin-bottom: 15px;
+}
+
+
+.level p {
+
+    margin: 12px 0 0;
+
+    font-weight: 600;
+
+    font-size: 16px;
 }
 
 
 .progress,
 .bar {
 
-    height: 16px;
+    height: 18px;
 
-    flex: 1;
-
-    background: #ddd;
+    background: #e8e8e8;
 
     border-radius: 20px;
 
@@ -71,11 +74,15 @@ h2 {
 
     height: 100%;
 
-    background: #40d46a;
+    background: linear-gradient(
+        90deg,
+        #39d353,
+        #20b84b
+    );
 
     border-radius: inherit;
-
 }
+
 
 
 .statHeader {
@@ -84,16 +91,18 @@ h2 {
 
     align-items: center;
 
-    gap: 10px;
+    gap: 12px;
+
+    margin-bottom: 12px;
 
 }
 
 
 .statHeader img {
 
-    width: 40px;
+    width: 42px;
 
-    height: 40px;
+    height: 42px;
 
 }
 
@@ -102,35 +111,92 @@ h2 {
 
     flex: 1;
 
-    font-weight: 700;
+    font-size: 18px;
+
+    font-weight: 800;
+}
+
+
+.statHeader b {
+
+    font-size: 18px;
 
 }
+
 
 
 .bar {
 
-    margin-top: 10px;
+    height: 14px;
 
 }
+
 
 
 .hungerFill {
 
     height: 100%;
 
-    background: #8bd22f;
-
-    border-radius: inherit;
+    background: linear-gradient(
+        90deg,
+        #8bd22f,
+        #b4ed43
+    );
 
 }
+
+
+
+.energyFill {
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #ffc107,
+        #ff9800
+    );
+
+}
+
 
 
 .moodFill {
 
     height: 100%;
 
-    background: #ffb000;
+    background: linear-gradient(
+        90deg,
+        #ffb000,
+        #ffd54f
+    );
 
-    border-radius: inherit;
+}
 
+.levelNumber {
+    font-size: 32px;
+    font-weight: 800;
+
+    margin: 15px 0;
+}
+
+
+.exp {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 15px;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+
+.exp img {
+    width: 35px;
+    height: 35px;
 }

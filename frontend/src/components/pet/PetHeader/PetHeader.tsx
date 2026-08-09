@@ -42,18 +42,6 @@ function PetHeader() {
                         12 450
                     </span>
                 </div>
-
-                <div className={styles.card}>
-                    <img
-                        src="/energy.png"
-                        alt="Energy"
-                    />
-
-                    <span>
-                        80/100
-                    </span>
-                </div>
-
             </div>
 
         </header>

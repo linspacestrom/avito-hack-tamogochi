@@ -4,6 +4,8 @@ import Pet from "../pages/Pet";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ProtectedRoute from "../components/ProtectedRoute/ProtectedRoute";
+import Rewards from "../pages/Rewards";
+
 
 const router = createBrowserRouter([
   {
@@ -25,6 +27,10 @@ const router = createBrowserRouter([
         <Pet />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/rewards",
+    element: <Rewards />,
   },
 ]);
 

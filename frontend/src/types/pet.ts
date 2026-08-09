@@ -7,6 +7,7 @@ export interface Pet {
     experience: number;
 
     health: number;
+    hunger: number;
     energy: number;
     happiness: number;
 
