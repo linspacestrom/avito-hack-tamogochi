@@ -1,0 +1,50 @@
+.scene {
+    position: relative;
+
+    width: 100%;
+
+    max-width: 1000px;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+}
+
+
+.room {
+    width: 100%;
+
+    display: block;
+}
+
+
+.cat {
+    position: absolute;
+
+    width: 59%;
+
+    left: 20%;
+
+    bottom: -3%;
+
+    transform-origin: center bottom;
+
+    animation: breathe 3s ease-in-out infinite;
+}
+
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        transform:
+            scale(1) rotate(-0.5deg);
+    }
+
+
+    50% {
+        transform:
+            scale(1.018) rotate(0.5deg);
+    }
+
+}

@@ -1,0 +1,55 @@
+.actions {
+    width: 280px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+.item {
+
+    background: white;
+
+    border: 1px solid black;
+
+    border-radius: 30px;
+
+    overflow: hidden;
+
+}
+
+
+button {
+
+    width: 100%;
+
+    padding: 24px;
+
+    background: transparent;
+
+    border: none;
+
+    cursor: pointer;
+
+    font-size: 22px;
+
+    font-weight: 700;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+
+.content {
+
+    padding: 20px;
+
+    border-top: 1px solid #ddd;
+
+}
