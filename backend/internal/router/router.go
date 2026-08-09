@@ -42,5 +42,11 @@ func New(
 		r.Post("/daily-claim", h.DailyClaim)
 	})
 
+	r.Route("/api/tasks", func(r chi.Router) {
+		r.Use(appmiddleware.RequireAuth(auth, log))
+		r.Get("/me", h.ListMyTasks)
+		r.Post("/{code}/claim", h.ClaimTask)
+	})
+
 	return r
 }
