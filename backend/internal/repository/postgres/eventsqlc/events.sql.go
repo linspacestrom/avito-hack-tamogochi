@@ -143,6 +143,26 @@ func (q *Queries) GetEventByID(ctx context.Context, arg GetEventByIDParams) (Eve
 	return i, err
 }
 
+const getEventStoreBoundary = `-- name: GetEventStoreBoundary :one
+SELECT
+    last_position AS high_water,
+    (EXTRACT(EPOCH FROM statement_timestamp()) * 1000000)::BIGINT AS captured_at_unix_micro
+FROM event_store_position
+WHERE singleton = TRUE
+`
+
+type GetEventStoreBoundaryRow struct {
+	HighWater           int64 `json:"high_water"`
+	CapturedAtUnixMicro int64 `json:"captured_at_unix_micro"`
+}
+
+func (q *Queries) GetEventStoreBoundary(ctx context.Context) (GetEventStoreBoundaryRow, error) {
+	row := q.db.QueryRow(ctx, getEventStoreBoundary)
+	var i GetEventStoreBoundaryRow
+	err := row.Scan(&i.HighWater, &i.CapturedAtUnixMicro)
+	return i, err
+}
+
 const listAggregateEvents = `-- name: ListAggregateEvents :many
 SELECT global_position, event_id, aggregate_type, aggregate_id, owner_user_id, aggregate_version, event_type, schema_version, payload, metadata, actor_user_id, command_id, command_event_index, occurred_at, recorded_at
 FROM app_api.list_aggregate_events(
@@ -292,6 +312,55 @@ func (q *Queries) ListEventsByCommandID(ctx context.Context, arg ListEventsByCom
 			&i.CommandEventIndex,
 			&i.OccurredAt,
 			&i.RecordedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUserEventsByPosition = `-- name: ListUserEventsByPosition :many
+SELECT global_position, event_id, owner_user_id, event_type, schema_version, payload
+FROM app_api.list_daily_summary_events_by_position(
+    $1::UUID,
+    $2::BIGINT,
+    $3::BIGINT,
+    $4::INTEGER
+)
+`
+
+type ListUserEventsByPositionParams struct {
+	OwnerUserID   uuid.UUID `json:"owner_user_id"`
+	AfterPosition int64     `json:"after_position"`
+	ToPosition    int64     `json:"to_position"`
+	PageSize      int32     `json:"page_size"`
+}
+
+func (q *Queries) ListUserEventsByPosition(ctx context.Context, arg ListUserEventsByPositionParams) ([]DailySummaryEventView, error) {
+	rows, err := q.db.Query(ctx, listUserEventsByPosition,
+		arg.OwnerUserID,
+		arg.AfterPosition,
+		arg.ToPosition,
+		arg.PageSize,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DailySummaryEventView{}
+	for rows.Next() {
+		var i DailySummaryEventView
+		if err := rows.Scan(
+			&i.GlobalPosition,
+			&i.EventID,
+			&i.OwnerUserID,
+			&i.EventType,
+			&i.SchemaVersion,
+			&i.Payload,
 		); err != nil {
 			return nil, err
 		}

@@ -62,3 +62,19 @@ FROM event_store
 WHERE global_position > sqlc.arg(after_position)
 ORDER BY global_position ASC
 LIMIT LEAST(GREATEST(sqlc.arg(page_size)::INTEGER, 1), 500);
+
+-- name: GetEventStoreBoundary :one
+SELECT
+    last_position AS high_water,
+    (EXTRACT(EPOCH FROM statement_timestamp()) * 1000000)::BIGINT AS captured_at_unix_micro
+FROM event_store_position
+WHERE singleton = TRUE;
+
+-- name: ListUserEventsByPosition :many
+SELECT *
+FROM app_api.list_daily_summary_events_by_position(
+    sqlc.arg(owner_user_id)::UUID,
+    sqlc.arg(after_position)::BIGINT,
+    sqlc.arg(to_position)::BIGINT,
+    sqlc.arg(page_size)::INTEGER
+);

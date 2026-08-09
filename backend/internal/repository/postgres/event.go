@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/dailysummary"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/event"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/repository/postgres/eventsqlc"
 	"github.com/google/uuid"
@@ -179,6 +181,54 @@ func (r *EventRepository) ListAggregateEvents(
 	return eventsFromDB(rows)
 }
 
+// CaptureBoundary returns a global position and database time from one statement.
+func (r *EventRepository) CaptureBoundary(
+	ctx context.Context,
+) (dailysummary.EventBoundary, error) {
+	row, err := eventsqlc.New(r.repo.GetConn(ctx)).GetEventStoreBoundary(ctx)
+	if err != nil {
+		return dailysummary.EventBoundary{}, fmt.Errorf("capture event store boundary: %w", err)
+	}
+
+	return dailysummary.EventBoundary{
+		HighWater:  row.HighWater,
+		CapturedAt: time.UnixMicro(row.CapturedAtUnixMicro).UTC(),
+	}, nil
+}
+
+// GetHighWater is kept as a convenience for diagnostics and integration tests.
+func (r *EventRepository) GetHighWater(ctx context.Context) (int64, error) {
+	boundary, err := r.CaptureBoundary(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return boundary.HighWater, nil
+}
+
+// ListUserEventsByPosition reads an owner-scoped page bounded by a stable high-water mark.
+func (r *EventRepository) ListUserEventsByPosition(
+	ctx context.Context,
+	ownerUserID uuid.UUID,
+	afterPosition int64,
+	toPosition int64,
+	limit int32,
+) ([]event.Event, error) {
+	rows, err := eventsqlc.New(r.repo.GetConn(ctx)).ListUserEventsByPosition(
+		ctx,
+		eventsqlc.ListUserEventsByPositionParams{
+			OwnerUserID:   ownerUserID,
+			AfterPosition: afterPosition,
+			ToPosition:    toPosition,
+			PageSize:      limit,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list user events by position: %w", err)
+	}
+
+	return dailySummaryEventsFromDB(rows), nil
+}
+
 func mapAppendError(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return event.ErrVersionConflict
@@ -207,6 +257,21 @@ func eventsFromDB(rows []eventsqlc.EventStore) ([]event.Event, error) {
 		events = append(events, stored)
 	}
 	return events, nil
+}
+
+func dailySummaryEventsFromDB(rows []eventsqlc.DailySummaryEventView) []event.Event {
+	events := make([]event.Event, 0, len(rows))
+	for _, row := range rows {
+		events = append(events, event.Event{
+			GlobalPosition: row.GlobalPosition,
+			ID:             row.EventID,
+			OwnerUserID:    row.OwnerUserID,
+			Type:           event.EventType(row.EventType),
+			SchemaVersion:  row.SchemaVersion,
+			Payload:        append([]byte(nil), row.Payload...),
+		})
+	}
+	return events
 }
 
 func eventFromDB(row eventsqlc.EventStore) (event.Event, error) {

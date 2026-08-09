@@ -16,6 +16,32 @@ type AggregateStream struct {
 	CurrentVersion int64     `json:"current_version"`
 }
 
+type DailySummaryCheckpoint struct {
+	UserID            uuid.UUID          `json:"user_id"`
+	LastCheckInAt     pgtype.Timestamptz `json:"last_check_in_at"`
+	LastEventPosition int64              `json:"last_event_position"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+}
+
+type DailySummaryEventFailure struct {
+	UserID         uuid.UUID          `json:"user_id"`
+	EventID        uuid.UUID          `json:"event_id"`
+	GlobalPosition int64              `json:"global_position"`
+	EventType      string             `json:"event_type"`
+	SchemaVersion  int32              `json:"schema_version"`
+	Reason         string             `json:"reason"`
+	DetectedAt     pgtype.Timestamptz `json:"detected_at"`
+}
+
+type DailySummaryEventView struct {
+	GlobalPosition int64     `json:"global_position"`
+	EventID        uuid.UUID `json:"event_id"`
+	OwnerUserID    uuid.UUID `json:"owner_user_id"`
+	EventType      string    `json:"event_type"`
+	SchemaVersion  int32     `json:"schema_version"`
+	Payload        []byte    `json:"payload"`
+}
+
 type EventStore struct {
 	GlobalPosition    int64              `json:"global_position"`
 	EventID           uuid.UUID          `json:"event_id"`
