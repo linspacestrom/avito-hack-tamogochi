@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	AdvanceLeaderboardPetLevel(ctx context.Context, arg AdvanceLeaderboardPetLevelParams) (int64, error)
 	CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) (RefreshSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserReward(ctx context.Context, arg CreateUserRewardParams) (UserReward, error)
@@ -22,12 +23,18 @@ type Querier interface {
 	GetRewardForDay(ctx context.Context, dayNumber int32) (RewardDefinition, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserLeaderboardPositions(ctx context.Context, userID uuid.UUID) (GetUserLeaderboardPositionsRow, error)
 	InsertDailySummaryCheckpoint(ctx context.Context, arg InsertDailySummaryCheckpointParams) (int64, error)
+	InsertLeaderboardPet(ctx context.Context, arg InsertLeaderboardPetParams) (int64, error)
+	ListGameScoreLeaderboard(ctx context.Context, arg ListGameScoreLeaderboardParams) ([]ListGameScoreLeaderboardRow, error)
+	ListPetLevelLeaderboard(ctx context.Context, arg ListPetLevelLeaderboardParams) ([]ListPetLevelLeaderboardRow, error)
 	ListUserRewards(ctx context.Context, userID uuid.UUID) ([]UserReward, error)
 	LogDailyRewardClaim(ctx context.Context, arg LogDailyRewardClaimParams) error
 	RecordDailySummaryEventFailure(ctx context.Context, arg RecordDailySummaryEventFailureParams) (bool, error)
+	RecordLeaderboardEventFailure(ctx context.Context, arg RecordLeaderboardEventFailureParams) (int64, error)
 	UpdateDailySummaryCheckpoint(ctx context.Context, arg UpdateDailySummaryCheckpointParams) (int64, error)
 	UpsertDailyRewardProgress(ctx context.Context, arg UpsertDailyRewardProgressParams) error
+	UpsertLeaderboardGameScore(ctx context.Context, arg UpsertLeaderboardGameScoreParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)

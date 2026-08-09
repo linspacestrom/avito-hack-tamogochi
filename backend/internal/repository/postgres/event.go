@@ -229,6 +229,65 @@ func (r *EventRepository) ListUserEventsByPosition(
 	return dailySummaryEventsFromDB(rows), nil
 }
 
+// LockProjection serializes workers that update the same projection checkpoint.
+func (r *EventRepository) LockProjection(ctx context.Context, projectionName string) error {
+	err := eventsqlc.New(r.repo.GetConn(ctx)).LockProjection(ctx, projectionName)
+	if err != nil {
+		return fmt.Errorf("lock projection: %w", err)
+	}
+	return nil
+}
+
+// GetProjectionCheckpoint returns the last global event position processed by a projection.
+func (r *EventRepository) GetProjectionCheckpoint(
+	ctx context.Context,
+	projectionName string,
+) (int64, error) {
+	position, err := eventsqlc.New(r.repo.GetConn(ctx)).GetProjectionCheckpoint(ctx, projectionName)
+	if err != nil {
+		return 0, fmt.Errorf("get projection checkpoint: %w", err)
+	}
+	return position, nil
+}
+
+// ListEventsAfterPosition returns an ordered Event Store page for projectors.
+func (r *EventRepository) ListEventsAfterPosition(
+	ctx context.Context,
+	afterPosition int64,
+	limit int32,
+) ([]event.Event, error) {
+	rows, err := eventsqlc.New(r.repo.GetConn(ctx)).ListEventsAfterPosition(
+		ctx,
+		eventsqlc.ListEventsAfterPositionParams{
+			AfterPosition: afterPosition,
+			PageSize:      limit,
+		},
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list events after position: %w", err)
+	}
+	return eventsFromDB(rows)
+}
+
+// SaveProjectionCheckpoint advances a projection checkpoint monotonically.
+func (r *EventRepository) SaveProjectionCheckpoint(
+	ctx context.Context,
+	projectionName string,
+	position int64,
+) error {
+	err := eventsqlc.New(r.repo.GetConn(ctx)).SaveProjectionCheckpoint(
+		ctx,
+		eventsqlc.SaveProjectionCheckpointParams{
+			ProjectionName: projectionName,
+			LastPosition:   position,
+		},
+	)
+	if err != nil {
+		return fmt.Errorf("save projection checkpoint: %w", err)
+	}
+	return nil
+}
+
 func mapAppendError(err error) error {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return event.ErrVersionConflict
