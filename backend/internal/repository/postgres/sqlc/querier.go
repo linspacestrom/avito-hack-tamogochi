@@ -17,15 +17,19 @@ type Querier interface {
 	CreateUserReward(ctx context.Context, arg CreateUserRewardParams) (UserReward, error)
 	DeleteRefreshSession(ctx context.Context, tokenHash []byte) (int64, error)
 	GetDailyRewardProgress(ctx context.Context, userID uuid.UUID) (GetDailyRewardProgressRow, error)
+	GetDailySummaryCheckpointForUpdate(ctx context.Context, userID uuid.UUID) (GetDailySummaryCheckpointForUpdateRow, error)
 	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash []byte) (RefreshSession, error)
 	GetRewardDefinitionByCode(ctx context.Context, code string) (RewardDefinition, error)
 	GetRewardForDay(ctx context.Context, dayNumber int32) (RewardDefinition, error)
 	GetTaskWithProgressByCode(ctx context.Context, arg GetTaskWithProgressByCodeParams) (GetTaskWithProgressByCodeRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	InsertDailySummaryCheckpoint(ctx context.Context, arg InsertDailySummaryCheckpointParams) (int64, error)
 	ListTasksWithProgress(ctx context.Context, userID uuid.UUID) ([]ListTasksWithProgressRow, error)
 	ListUserRewards(ctx context.Context, userID uuid.UUID) ([]UserReward, error)
 	LogDailyRewardClaim(ctx context.Context, arg LogDailyRewardClaimParams) error
+	RecordDailySummaryEventFailure(ctx context.Context, arg RecordDailySummaryEventFailureParams) (bool, error)
+	UpdateDailySummaryCheckpoint(ctx context.Context, arg UpdateDailySummaryCheckpointParams) (int64, error)
 	UpsertDailyRewardProgress(ctx context.Context, arg UpsertDailyRewardProgressParams) error
 }
 

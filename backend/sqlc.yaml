@@ -21,6 +21,7 @@ sql:
     schema:
       - "migrations/000002_auth.up.sql"
       - "migrations/000009_event_store.up.sql"
+      - "migrations/000010_daily_summary.up.sql"
     gen:
       go:
         package: "eventsqlc"

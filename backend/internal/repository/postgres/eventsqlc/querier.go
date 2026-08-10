@@ -14,12 +14,14 @@ type Querier interface {
 	GetAggregateVersion(ctx context.Context, arg GetAggregateVersionParams) (int64, error)
 	// owner_user_id limits the lookup to the authenticated user.
 	GetEventByID(ctx context.Context, arg GetEventByIDParams) (EventStore, error)
+	GetEventStoreBoundary(ctx context.Context) (GetEventStoreBoundaryRow, error)
 	// Returns the last event position processed by a projection.
 	GetProjectionCheckpoint(ctx context.Context, projectionName string) (int64, error)
 	ListAggregateEvents(ctx context.Context, arg ListAggregateEventsParams) ([]EventStore, error)
 	// Projection workers consume events in global order when updating read models.
 	ListEventsAfterPosition(ctx context.Context, arg ListEventsAfterPositionParams) ([]EventStore, error)
 	ListEventsByCommandID(ctx context.Context, arg ListEventsByCommandIDParams) ([]EventStore, error)
+	ListUserEventsByPosition(ctx context.Context, arg ListUserEventsByPositionParams) ([]DailySummaryEventView, error)
 	LockEventCommand(ctx context.Context, arg LockEventCommandParams) error
 	// Advances a projection checkpoint after its read model is updated.
 	SaveProjectionCheckpoint(ctx context.Context, arg SaveProjectionCheckpointParams) error

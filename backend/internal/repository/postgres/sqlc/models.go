@@ -30,6 +30,32 @@ type DailyRewardCycle struct {
 	RewardDefinitionID uuid.UUID
 }
 
+type DailySummaryCheckpoint struct {
+	UserID            uuid.UUID
+	LastCheckInAt     pgtype.Timestamptz
+	LastEventPosition int64
+	UpdatedAt         pgtype.Timestamptz
+}
+
+type DailySummaryEventFailure struct {
+	UserID         uuid.UUID
+	EventID        uuid.UUID
+	GlobalPosition int64
+	EventType      string
+	SchemaVersion  int32
+	Reason         string
+	DetectedAt     pgtype.Timestamptz
+}
+
+type DailySummaryEventView struct {
+	GlobalPosition int64
+	EventID        uuid.UUID
+	OwnerUserID    uuid.UUID
+	EventType      string
+	SchemaVersion  int32
+	Payload        []byte
+}
+
 type EventStore struct {
 	GlobalPosition    int64
 	EventID           uuid.UUID
