@@ -29,6 +29,7 @@ type Handler struct {
 	auth       AuthService
 	rewards    RewardsService
 	dailyCycle DailyCycleService
+	tasks      TasksService
 }
 
 func New(
@@ -36,8 +37,9 @@ func New(
 	auth AuthService,
 	rewards RewardsService,
 	dailyCycle DailyCycleService,
+	tasks TasksService,
 ) *Handler {
-	return &Handler{log: log, auth: auth, rewards: rewards, dailyCycle: dailyCycle}
+	return &Handler{log: log, auth: auth, rewards: rewards, dailyCycle: dailyCycle, tasks: tasks}
 }
 
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {
