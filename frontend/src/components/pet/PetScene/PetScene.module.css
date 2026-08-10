@@ -1,0 +1,64 @@
+.scene {
+    position: relative;
+
+    width: 100%;
+
+    max-width: 1000px;
+
+    overflow: hidden;
+
+    border-radius: 24px;
+}
+
+
+.room {
+    width: 100%;
+
+    display: block;
+}
+
+
+.catWrapper {
+    position: absolute;
+
+    width: 59%;
+    height: 75%;
+
+    left: 50%;
+    bottom: 0;
+
+    transform: translateX(-50%);
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.cat {
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+    object-position: center bottom;
+
+    transform-origin: center bottom;
+
+    animation: breathe 3s ease-in-out infinite;
+}
+
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        transform:
+            scale(1) rotate(-0.5deg);
+    }
+
+
+    50% {
+        transform:
+            scale(1.018) rotate(0.5deg);
+    }
+
+}

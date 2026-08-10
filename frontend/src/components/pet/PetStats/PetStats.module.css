@@ -1,0 +1,202 @@
+.stats {
+    width: 280px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+.level,
+.stat {
+
+    background: white;
+
+    border-radius: 28px;
+
+    padding: 22px;
+
+    border: 2px solid #222;
+
+    box-shadow: 0 5px 0 rgba(0,0,0,0.08);
+
+}
+
+
+h2 {
+
+    margin: 0 0 10px;
+
+    font-size: 20px;
+
+}
+
+
+.levelNumber {
+
+    font-size: 64px;
+
+    font-weight: 800;
+
+    line-height: 1;
+
+    margin-bottom: 15px;
+}
+
+
+.level p {
+
+    margin: 12px 0 0;
+
+    font-weight: 600;
+
+    font-size: 16px;
+}
+
+
+.progress,
+.bar {
+
+    height: 18px;
+
+    background: #e8e8e8;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+}
+
+
+.progressFill {
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #39d353,
+        #20b84b
+    );
+
+    border-radius: inherit;
+}
+
+
+
+.statHeader {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+
+}
+
+
+.statHeader img {
+
+    width: 42px;
+
+    height: 42px;
+
+}
+
+
+.statHeader span {
+
+    flex: 1;
+
+    font-size: 18px;
+
+    font-weight: 800;
+}
+
+
+.statHeader b {
+
+    font-size: 18px;
+
+}
+
+
+
+.bar {
+
+    height: 14px;
+
+}
+
+
+
+.hungerFill {
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #8bd22f,
+        #b4ed43
+    );
+
+}
+
+
+
+.energyFill {
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #ffc107,
+        #ff9800
+    );
+
+}
+
+
+
+.moodFill {
+
+    height: 100%;
+
+    background: linear-gradient(
+        90deg,
+        #ffb000,
+        #ffd54f
+    );
+
+}
+
+.levelNumber {
+    font-size: 32px;
+    font-weight: 800;
+
+    margin: 15px 0;
+}
+
+
+.exp {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 15px;
+
+    font-size: 20px;
+
+    font-weight: 700;
+}
+
+
+.exp img {
+    width: 35px;
+    height: 35px;
+}
