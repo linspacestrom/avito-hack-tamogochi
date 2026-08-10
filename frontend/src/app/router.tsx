@@ -12,14 +12,17 @@ const router = createBrowserRouter([
     path: "/",
     element: <Navigate to="/login" replace />,
   },
+
   {
     path: "/login",
     element: <Login />,
   },
+
   {
     path: "/register",
     element: <Register />,
   },
+
   {
     path: "/pet",
     element: (
@@ -28,10 +31,16 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
+
   {
     path: "/rewards",
-    element: <Rewards />,
+    element: (
+      <ProtectedRoute>
+        <Rewards />
+      </ProtectedRoute>
+    ),
   },
 ]);
+
 
 export default router;
