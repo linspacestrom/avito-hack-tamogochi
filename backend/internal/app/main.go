@@ -64,7 +64,7 @@ func New(
 	rewardsService := rewards.NewService(repo.Rewards)
 	dailyCycleService := rewards.NewDailyCycleService(repo.Rewards, transactionManager)
 	tasksService := tasks.NewService(repo.Tasks, repo.Rewards, transactionManager)
-	services := service.New(authService, rewardsService, dailyCycleService, tasksService)
+	services := service.New(authService, eventService, rewardsService, dailyCycleService, tasksService)
 	httpHandler := handler.New(log, services.Auth, services.Rewards, services.DailyCycle, services.Tasks)
 	httpRouter := router.New(httpHandler, authService, log)
 

@@ -28,8 +28,8 @@ func New(
 		Event:      eventService,
 		Rewards:    rewardsService,
 		DailyCycle: dailyCycle,
+		Tasks:      tasksService,
 	}
-	return &Services{Auth: auth, Rewards: rewardsService, DailyCycle: dailyCycle, Tasks: tasksService}
 }
 
 type TransactorFunc func(ctx context.Context, fn func(context.Context) error) error
