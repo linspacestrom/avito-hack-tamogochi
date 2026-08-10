@@ -13,6 +13,7 @@ import (
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/router"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/server"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/service"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/tasks"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/token"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
@@ -62,8 +63,9 @@ func New(
 	eventService := event.NewService(repo.Event, transactionManager)
 	rewardsService := rewards.NewService(repo.Rewards)
 	dailyCycleService := rewards.NewDailyCycleService(repo.Rewards, transactionManager)
-	services := service.New(authService, eventService, rewardsService, dailyCycleService)
-	httpHandler := handler.New(log, services.Auth, services.Rewards, services.DailyCycle)
+	tasksService := tasks.NewService(repo.Tasks, repo.Rewards, transactionManager)
+	services := service.New(authService, rewardsService, dailyCycleService, tasksService)
+	httpHandler := handler.New(log, services.Auth, services.Rewards, services.DailyCycle, services.Tasks)
 	httpRouter := router.New(httpHandler, authService, log)
 
 	log.Info("database connection established",

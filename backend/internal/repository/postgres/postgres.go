@@ -17,6 +17,7 @@ type Repository struct {
 	Rewards      *RewardsRepository
 	DailySummary *DailySummaryRepository
 	Leaderboard  *LeaderboardRepository
+	Tasks   *TasksRepository
 }
 
 func New(db *pgxpool.Pool) *Repository {
@@ -31,6 +32,7 @@ func New(db *pgxpool.Pool) *Repository {
 	r.Rewards = NewRewardsRepository(r)
 	r.DailySummary = NewDailySummaryRepository(r)
 	r.Leaderboard = NewLeaderboardRepository(r)
+	r.Tasks = NewTasksRepository(r)
 	return r
 }
 

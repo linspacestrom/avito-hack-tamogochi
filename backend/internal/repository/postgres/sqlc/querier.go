@@ -12,6 +12,7 @@ import (
 
 type Querier interface {
 	AdvanceLeaderboardPetLevel(ctx context.Context, arg AdvanceLeaderboardPetLevelParams) (int64, error)
+	ClaimTaskProgress(ctx context.Context, arg ClaimTaskProgressParams) (uuid.UUID, error)
 	CreateRefreshSession(ctx context.Context, arg CreateRefreshSessionParams) (RefreshSession, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	CreateUserReward(ctx context.Context, arg CreateUserRewardParams) (UserReward, error)
@@ -21,6 +22,7 @@ type Querier interface {
 	GetRefreshSessionByTokenHash(ctx context.Context, tokenHash []byte) (RefreshSession, error)
 	GetRewardDefinitionByCode(ctx context.Context, code string) (RewardDefinition, error)
 	GetRewardForDay(ctx context.Context, dayNumber int32) (RewardDefinition, error)
+	GetTaskWithProgressByCode(ctx context.Context, arg GetTaskWithProgressByCodeParams) (GetTaskWithProgressByCodeRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserLeaderboardPositions(ctx context.Context, userID uuid.UUID) (GetUserLeaderboardPositionsRow, error)
@@ -28,6 +30,7 @@ type Querier interface {
 	InsertLeaderboardPet(ctx context.Context, arg InsertLeaderboardPetParams) (int64, error)
 	ListGameScoreLeaderboard(ctx context.Context, arg ListGameScoreLeaderboardParams) ([]ListGameScoreLeaderboardRow, error)
 	ListPetLevelLeaderboard(ctx context.Context, arg ListPetLevelLeaderboardParams) ([]ListPetLevelLeaderboardRow, error)
+	ListTasksWithProgress(ctx context.Context, userID uuid.UUID) ([]ListTasksWithProgressRow, error)
 	ListUserRewards(ctx context.Context, userID uuid.UUID) ([]UserReward, error)
 	LogDailyRewardClaim(ctx context.Context, arg LogDailyRewardClaimParams) error
 	RecordDailySummaryEventFailure(ctx context.Context, arg RecordDailySummaryEventFailureParams) (bool, error)
