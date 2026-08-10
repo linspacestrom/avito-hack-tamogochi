@@ -5,6 +5,7 @@ import (
 
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/event"
 	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/rewards"
+	"github.com/NBx03/avito-hack-tamagotchi/backend/internal/tasks"
 )
 
 type Services struct {
@@ -12,6 +13,7 @@ type Services struct {
 	Event      *event.Service
 	Rewards    *rewards.Service
 	DailyCycle *rewards.DailyCycleService
+	Tasks      *tasks.Service
 }
 
 func New(
@@ -19,6 +21,7 @@ func New(
 	eventService *event.Service,
 	rewardsService *rewards.Service,
 	dailyCycle *rewards.DailyCycleService,
+	tasksService *tasks.Service,
 ) *Services {
 	return &Services{
 		Auth:       auth,
@@ -26,6 +29,7 @@ func New(
 		Rewards:    rewardsService,
 		DailyCycle: dailyCycle,
 	}
+	return &Services{Auth: auth, Rewards: rewardsService, DailyCycle: dailyCycle, Tasks: tasksService}
 }
 
 type TransactorFunc func(ctx context.Context, fn func(context.Context) error) error
