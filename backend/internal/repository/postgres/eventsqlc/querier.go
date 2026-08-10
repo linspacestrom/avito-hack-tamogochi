@@ -23,6 +23,9 @@ type Querier interface {
 	ListEventsByCommandID(ctx context.Context, arg ListEventsByCommandIDParams) ([]EventStore, error)
 	ListUserEventsByPosition(ctx context.Context, arg ListUserEventsByPositionParams) ([]DailySummaryEventView, error)
 	LockEventCommand(ctx context.Context, arg LockEventCommandParams) error
+	// Serializes workers that update the same projection and checkpoint.
+	// The fixed hash seed keeps the same projection name mapped to one 64-bit lock key.
+	LockProjection(ctx context.Context, projectionName string) error
 	// Advances a projection checkpoint after its read model is updated.
 	SaveProjectionCheckpoint(ctx context.Context, arg SaveProjectionCheckpointParams) error
 }

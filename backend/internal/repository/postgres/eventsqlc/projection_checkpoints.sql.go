@@ -25,6 +25,17 @@ func (q *Queries) GetProjectionCheckpoint(ctx context.Context, projectionName st
 	return last_position, err
 }
 
+const lockProjection = `-- name: LockProjection :exec
+SELECT pg_advisory_xact_lock(hashtextextended($1::TEXT, 0))
+`
+
+// Serializes workers that update the same projection and checkpoint.
+// The fixed hash seed keeps the same projection name mapped to one 64-bit lock key.
+func (q *Queries) LockProjection(ctx context.Context, projectionName string) error {
+	_, err := q.db.Exec(ctx, lockProjection, projectionName)
+	return err
+}
+
 const saveProjectionCheckpoint = `-- name: SaveProjectionCheckpoint :exec
 SELECT app_api.save_projection_checkpoint(
     $1::TEXT,

@@ -79,6 +79,34 @@ type EventStorePosition struct {
 	LastPosition int64
 }
 
+type LeaderboardEventFailure struct {
+	EventID        uuid.UUID
+	UserID         uuid.UUID
+	GlobalPosition int64
+	EventType      string
+	SchemaVersion  int32
+	Reason         string
+	DetectedAt     pgtype.Timestamptz
+}
+
+type LeaderboardGameScore struct {
+	UserID           uuid.UUID
+	SessionID        uuid.UUID
+	BestScore        int64
+	AchievedPosition int64
+	UpdatedAt        pgtype.Timestamptz
+}
+
+type LeaderboardPetLevel struct {
+	UserID               uuid.UUID
+	PetID                uuid.UUID
+	PetName              string
+	Species              string
+	Level                int32
+	LevelReachedPosition int64
+	UpdatedAt            pgtype.Timestamptz
+}
+
 type ProjectionCheckpoint struct {
 	ProjectionName string
 	LastPosition   int64

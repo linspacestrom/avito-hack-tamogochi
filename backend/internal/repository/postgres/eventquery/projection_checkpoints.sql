@@ -1,3 +1,8 @@
+-- Serializes workers that update the same projection and checkpoint.
+-- The fixed hash seed keeps the same projection name mapped to one 64-bit lock key.
+-- name: LockProjection :exec
+SELECT pg_advisory_xact_lock(hashtextextended(sqlc.arg(projection_name)::TEXT, 0));
+
 -- Returns the last event position processed by a projection.
 -- name: GetProjectionCheckpoint :one
 SELECT COALESCE((

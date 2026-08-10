@@ -16,6 +16,7 @@ type Repository struct {
 	Event        *EventRepository
 	Rewards      *RewardsRepository
 	DailySummary *DailySummaryRepository
+	Leaderboard  *LeaderboardRepository
 	Tasks   *TasksRepository
 }
 
@@ -30,6 +31,7 @@ func New(db *pgxpool.Pool) *Repository {
 	r.Event = NewEventRepository(r)
 	r.Rewards = NewRewardsRepository(r)
 	r.DailySummary = NewDailySummaryRepository(r)
+	r.Leaderboard = NewLeaderboardRepository(r)
 	r.Tasks = NewTasksRepository(r)
 	return r
 }
