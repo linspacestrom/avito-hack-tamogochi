@@ -37,3 +37,10 @@ CREATE TABLE user_task_progress (
 
     UNIQUE (user_id, task_definition_id)
 );
+
+ALTER TABLE task_definitions OWNER TO app_owner;
+ALTER TABLE user_task_progress OWNER TO app_owner;
+
+REVOKE ALL ON TABLE task_definitions, user_task_progress FROM PUBLIC;
+GRANT SELECT ON TABLE task_definitions TO app_runtime;
+GRANT SELECT, INSERT, UPDATE ON TABLE user_task_progress TO app_runtime;

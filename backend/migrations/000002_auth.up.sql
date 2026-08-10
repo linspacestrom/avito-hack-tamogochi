@@ -24,3 +24,9 @@ CREATE INDEX refresh_sessions_user_id_idx
 
 CREATE INDEX refresh_sessions_expires_at_idx
     ON refresh_sessions (expires_at);
+
+ALTER TABLE users OWNER TO app_owner;
+ALTER TABLE refresh_sessions OWNER TO app_owner;
+
+REVOKE ALL ON TABLE users, refresh_sessions FROM PUBLIC;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE users, refresh_sessions TO app_runtime;

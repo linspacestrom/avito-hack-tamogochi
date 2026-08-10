@@ -20,3 +20,10 @@ CREATE TABLE user_daily_reward_progress (
     cycle_started_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     last_claimed_at   TIMESTAMPTZ
 );
+
+ALTER TABLE daily_reward_cycle OWNER TO app_owner;
+ALTER TABLE user_daily_reward_progress OWNER TO app_owner;
+
+REVOKE ALL ON TABLE daily_reward_cycle, user_daily_reward_progress FROM PUBLIC;
+GRANT SELECT ON TABLE daily_reward_cycle TO app_runtime;
+GRANT SELECT, INSERT, UPDATE ON TABLE user_daily_reward_progress TO app_runtime;

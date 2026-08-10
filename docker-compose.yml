@@ -3,29 +3,91 @@ services:
     build:
       context: ./backend
     ports:
-      - "8080:8080"
-    # depends_on:
-    #   - db
+      - "127.0.0.1:8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: app
+      DB_USERNAME: app_runtime
+      DB_PASSWORD: ${APP_RUNTIME_PASSWORD:?Set APP_RUNTIME_PASSWORD in .env}
+      DB_SSLMODE: disable
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - edge
+      - data
 
   frontend:
     build:
       context: ./frontend
     ports:
-      - "5173:5173"
+      - "127.0.0.1:5173:5173"
     depends_on:
       - backend
+    networks:
+      - edge
 
-  # db:
-  #   # placeholder: конкретная СУБД будет выбрана и обоснована отдельно
-  #   image: postgres:16-alpine
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_USER: app
-  #     POSTGRES_PASSWORD: app
-  #     POSTGRES_DB: app
-  #   volumes:
-  #     - db-data:/var/lib/postgresql/data
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in .env}
+      POSTGRES_DB: app
+      APP_RUNTIME_PASSWORD: ${APP_RUNTIME_PASSWORD:?Set APP_RUNTIME_PASSWORD in .env}
+      APP_PROJECTOR_PASSWORD: ${APP_PROJECTOR_PASSWORD:?Set APP_PROJECTOR_PASSWORD in .env}
+    command:
+      - postgres
+      - -c
+      - password_encryption=scram-sha-256
+      - -c
+      - statement_timeout=15s
+      - -c
+      - lock_timeout=5s
+      - -c
+      - idle_in_transaction_session_timeout=30s
+      - -c
+      - max_connections=100
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./backend/db/init/000000_runtime_roles.sh:/docker-entrypoint-initdb.d/000000_runtime_roles.sh:ro
+    pids_limit: 100
+    mem_limit: 512m
+    cpus: 1.0
+    networks:
+      - data
 
-# volumes:
-#   db-data:
+  migrate:
+    image: migrate/migrate:v4.18.3
+    environment:
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: app
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:?Set POSTGRES_ADMIN_PASSWORD in .env}
+      PGSSLMODE: disable
+      MIGRATIONS_PATH: /migrations
+      MIGRATE_DATABASE_URL: postgres://postgres@db:5432/app?sslmode=disable
+    entrypoint: ["/bin/sh", "/run-migrations.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend/migrations:/migrations:ro
+      - ./backend/db/run-migrations.sh:/run-migrations.sh:ro
+    networks:
+      - data
+
+volumes:
+  db-data:
+
+networks:
+  edge:
+  data:
+    internal: true

@@ -9,6 +9,13 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AggregateStream struct {
+	AggregateType  string
+	AggregateID    uuid.UUID
+	OwnerUserID    uuid.UUID
+	CurrentVersion int64
+}
+
 type DailyRewardClaimLog struct {
 	ID                 uuid.UUID
 	UserID             uuid.UUID
@@ -21,6 +28,35 @@ type DailyRewardCycle struct {
 	ID                 uuid.UUID
 	DayNumber          int32
 	RewardDefinitionID uuid.UUID
+}
+
+type EventStore struct {
+	GlobalPosition    int64
+	EventID           uuid.UUID
+	AggregateType     string
+	AggregateID       uuid.UUID
+	OwnerUserID       uuid.UUID
+	AggregateVersion  int64
+	EventType         string
+	SchemaVersion     int32
+	Payload           []byte
+	Metadata          []byte
+	ActorUserID       pgtype.UUID
+	CommandID         uuid.UUID
+	CommandEventIndex int16
+	OccurredAt        pgtype.Timestamptz
+	RecordedAt        pgtype.Timestamptz
+}
+
+type EventStorePosition struct {
+	Singleton    bool
+	LastPosition int64
+}
+
+type ProjectionCheckpoint struct {
+	ProjectionName string
+	LastPosition   int64
+	UpdatedAt      pgtype.Timestamptz
 }
 
 type RefreshSession struct {

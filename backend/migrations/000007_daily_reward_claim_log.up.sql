@@ -16,3 +16,8 @@ CREATE TABLE daily_reward_claim_log (
 
 CREATE INDEX daily_reward_claim_log_user_id_claimed_at_idx
     ON daily_reward_claim_log (user_id, claimed_at DESC);
+
+ALTER TABLE daily_reward_claim_log OWNER TO app_owner;
+
+REVOKE ALL ON TABLE daily_reward_claim_log FROM PUBLIC;
+GRANT SELECT, INSERT ON TABLE daily_reward_claim_log TO app_runtime;

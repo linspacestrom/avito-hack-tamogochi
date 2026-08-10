@@ -42,3 +42,10 @@ CREATE TABLE user_rewards (
     -- separate index on user_id alone is needed.
     UNIQUE (user_id, reward_definition_id)
 );
+
+ALTER TABLE reward_definitions OWNER TO app_owner;
+ALTER TABLE user_rewards OWNER TO app_owner;
+
+REVOKE ALL ON TABLE reward_definitions, user_rewards FROM PUBLIC;
+GRANT SELECT ON TABLE reward_definitions TO app_runtime;
+GRANT SELECT, INSERT, UPDATE ON TABLE user_rewards TO app_runtime;
